@@ -1,7 +1,8 @@
 from datetime import datetime, timezone
 from typing import Any, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator, model_validator
+from sqlmodel import Field, SQLModel
 
 # params = {
 #     # "where": "1=1",
@@ -30,11 +31,18 @@ class RecordsOnlyResponse(BaseModel):
     count: int
 
 
-class Attributes(BaseModel):
+class Attributes(SQLModel, table=True):
+    __tablename__ = "parcel_records"
+    
+    # Unified configuration to handle dot-notation API mapping inputs
     model_config = ConfigDict(populate_by_name=True)
 
+    # 1. Primary engine sequence key for relational tracking in Postgres
+    id: Optional[int] = Field(default=None, primary_key=True)
+
+    # 2. Native database column layout mappings matching your Pydantic properties
     features_sde_p_poly_parcel_objectid: int = Field(
-        alias="FEATURES.SDE.P_POLY_PARCEL.OBJECTID"
+        index=True, unique=True, alias="FEATURES.SDE.P_POLY_PARCEL.OBJECTID"
     )
     features_sde_p_poly_parcel_pid: Optional[str] = Field(
         default=None, max_length=15, alias="FEATURES.SDE.P_POLY_PARCEL.PID"
@@ -118,6 +126,7 @@ class Attributes(BaseModel):
         default=None, alias="FEATURES.SDE.CAMA.DOC_DATE"
     )
 
+    # 3. Intercept millisecond database epochs from ArcGIS
     @field_validator(
         "features_sde_cama_recorded_date", "features_sde_cama_doc_date", mode="before"
     )
@@ -126,7 +135,21 @@ class Attributes(BaseModel):
         if isinstance(value, (int, float)) and value > 1e11:
             return datetime.fromtimestamp(value / 1000, tz=timezone.utc)
         return value
-
+    
+    # 4. Global string stripping execution boundary
+    @model_validator(mode="before")
+    @classmethod
+    def strip_all_string_spaces(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            cleaned_data = {}
+            for key, value in data.items():
+                if isinstance(value, str):
+                    stripped = value.strip()
+                    cleaned_data[key] = stripped if stripped != "" else None
+                else:
+                    cleaned_data[key] = value
+            return cleaned_data
+        return data
 
 class Feature(BaseModel):
     attributes: Attributes
