@@ -11,4 +11,8 @@ db_url = PostgresDsn.build(
     path="mydatabase",
 )
 
-engine = create_engine(settings.)
+engine = create_engine(settings.SQLALCHEMY_DATABASE_URI)
+
+def get_session():
+    with Session(engine) as session:
+        yield session

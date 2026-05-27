@@ -18,12 +18,17 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = None
+from app.config import settings
+from app.models import Base
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
+target_metadata = Base.metadata
+
+def get_url():
+    return str(settings.SQLALCHEMY_DATABASE_URI)
 
 
 def run_migrations_offline() -> None:
@@ -51,14 +56,11 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
-    """Run migrations in 'online' mode.
+    alembic_config = config.get_section(config.config_ini_section, {})
+    alembic_config["sqlalchemy.url"] = get_url()
 
-    In this scenario we need to create an Engine
-    and associate a connection with the context.
-
-    """
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
+        alembic_config,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )

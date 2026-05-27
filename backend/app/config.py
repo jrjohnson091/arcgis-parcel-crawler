@@ -1,27 +1,36 @@
-from urllib.parse import quote
 from pydantic import HttpUrl, PostgresDsn, computed_field
+from pydantic_core import MultiHostUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    url: HttpUrl
-    postgres_password: str = "gis_secure_password"
-    postgres_user: str = "gis_user"
-    postgres_db: str = "parcel_db"
-    db_host: str = "db"
-    db_port: int = 5432
+    model_config = SettingsConfigDict(
+        # Use top level .env file (one level above ./backend/)
+        env_file="../.env",
+        env_file_encoding="utf-8",
+        env_ignore_empty=True,
+        extra="ignore",
+    )
+    URL: HttpUrl
+    POSTGRES_SERVER: str
+    POSTGRES_PORT: int = 5432
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str = ""
+    POSTGRES_DB: str = ""
 
     @computed_field
     @property
-    def postgres_dsn(self) -> PostgresDsn:
-        user = quote(self.postgres_user)
-        password = quote(self.postgres_password)
-
-        return PostgresDsn(
-            f"postgresql://{user}:{password}@{self.db_host}:{self.db_port}/{self.postgres_db}"
+    def SQLALCHEMY_DATABASE_URI(self) -> PostgresDsn:
+        url = MultiHostUrl.build(
+            scheme="postgresql+psycopg",
+            username=self.POSTGRES_USER,
+            password=self.POSTGRES_PASSWORD,
+            host=self.POSTGRES_SERVER,
+            port=self.POSTGRES_PORT,
+            path=self.POSTGRES_DB,
         )
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+        return str(url)
 
 
 settings = Settings()
