@@ -1,4 +1,24 @@
 services:
   db:
     ports:
-      - "5432:5432"
+      - '5432:5432'
+  backend:
+    restart: "no"
+    ports:
+      - "8000:8000"
+    # command: sleep infinity  # Infinite loop to keep container alive doing nothing
+    command:
+      - sleep
+      - infinity
+    develop:
+      watch:
+        - path: ./backend
+          action: sync
+          target: /app/backend
+          ignore:
+            - ./backend/.venv
+            - .venv
+        - path: ./backend/pyproject.toml
+          action: rebuild
+    volumes:
+      - ./backend/htmlcov:/app/backend/htmlcov

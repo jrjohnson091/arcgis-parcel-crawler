@@ -17,6 +17,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "coverage>=7.14.1",
     "ipython>=9.13.0",
     "pytest>=9.0.3",
 ]

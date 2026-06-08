@@ -19,7 +19,7 @@ services:
       - POSTGRES_DB=${POSTGRES_DB?Variable not set}
 
   prestart:
-    image: "${DOCKER_IMAGE?Variable not set}:${TAG-latest}"
+    image: ${DOCKER_IMAGE?Variable not set}:${TAG-latest}
     build:
       context: ./backend
     depends_on:
@@ -29,6 +29,20 @@ services:
     command: bash scripts/prestart.sh
     env_file:
       - .env
+
+  backend:
+    image: ${DOCKER_IMAGE?Variable not set}:${TAG-latest}
+    build:
+      context: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+        # restart: true
+      prestart:
+        condition: service_completed_successfully
+    env_file:
+      - .env
+    command: sleep infinity
 
 volumes:
   app-db-data:
