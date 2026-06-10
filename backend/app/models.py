@@ -5,6 +5,11 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlalchemy import DateTime, Float, Integer, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
+MIN_VALID_ARCGIS_DATE = datetime(1800, 1, 1, tzinfo=timezone.utc)
+MAX_VALID_ARCGIS_DATE = datetime.now(timezone.utc).replace(
+    year=datetime.now(timezone.utc).year + 1
+)
+
 
 class Params(BaseModel):
     where: str = "1=1"
@@ -97,12 +102,25 @@ class InboundAttributesSchema(BaseModel):
     recorded_date: Optional[datetime] = Field(default=None, alias="RECORDED_DATE")
     doc_date: Optional[datetime] = Field(default=None, alias="DOC_DATE")
 
-    # Hook 1: Automatically transform millisecond bigints to UTC Datetime objects
     @field_validator("recorded_date", "doc_date", mode="before")
     @classmethod
     def transform_ms_to_datetime(cls, value: Any) -> Any:
-        if isinstance(value, (int, float)) and value > 1e11:
-            return datetime.fromtimestamp(value / 1000, tz=timezone.utc)
+        if value is None:
+            return None
+
+        if isinstance(value, (int, float)) and abs(value) > 1e11:
+            parsed_date = datetime.fromtimestamp(value / 1000, tz=timezone.utc)
+
+            min_valid_date = datetime(1800, 1, 1, tzinfo=timezone.utc)
+            max_valid_date = datetime.now(timezone.utc).replace(
+                year=datetime.now(timezone.utc).year + 1
+            )
+
+            if parsed_date < min_valid_date or parsed_date > max_valid_date:
+                return None
+
+            return parsed_date
+
         return value
 
     # Hook 2: Walk the incoming fields, strip whitespace, map empty/blank inputs to None

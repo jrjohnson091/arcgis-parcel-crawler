@@ -192,3 +192,49 @@ def test_handles_multiple_features_in_payload():
     assert len(response.features) == 2
     assert response.features[0].attributes.objectid == 1
     assert response.features[1].attributes.objectid == 2
+
+def test_out_of_range_epoch_milliseconds_become_none():
+    raw_response = {
+        "features": [
+            {
+                "attributes": {
+                    "OBJECTID": 1,
+                    "PID": "3970500692",
+                    "RECORDED_DATE": -19879776000000,
+                    "DOC_DATE": 19454496000000,
+                }
+            }
+        ]
+    }
+
+    response = ArcGISResponse.model_validate(raw_response)
+    attrs = response.features[0].attributes
+
+    assert attrs.recorded_date is None
+    assert attrs.doc_date is None
+
+def test_valid_epoch_milliseconds_still_convert_to_datetime():
+    raw_response = {
+        "features": [
+            {
+                "attributes": {
+                    "OBJECTID": 1,
+                    "PID": "3970500692",
+                    "RECORDED_DATE": 1628726400000,
+                    "DOC_DATE": 1628640000000,
+                }
+            }
+        ]
+    }
+
+    response = ArcGISResponse.model_validate(raw_response)
+    attrs = response.features[0].attributes
+
+    assert attrs.recorded_date == datetime.fromtimestamp(
+        1628726400000 / 1000,
+        tz=timezone.utc,
+    )
+    assert attrs.doc_date == datetime.fromtimestamp(
+        1628640000000 / 1000,
+        tz=timezone.utc,
+    )
