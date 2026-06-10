@@ -95,7 +95,7 @@ def insert_features(
 
         skip_stmt = stmt.on_conflict_do_nothing(
             index_elements=[
-                Attributes.features_sde_p_poly_parcel_objectid,
+                Attributes.objectid,
             ]
         )
 
@@ -133,7 +133,7 @@ def validate_parcel_service() -> bool:
 
     first_feature = page_data.features[0]
 
-    if first_feature.attributes.features_sde_p_poly_parcel_objectid is None:
+    if first_feature.attributes.objectid is None:
         print("❌ Parcel service response is missing OBJECTID.")
         return False
 

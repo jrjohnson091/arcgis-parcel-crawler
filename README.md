@@ -1,22 +1,64 @@
 # Charleston County ArcGIS API Reference
 
-This document explains how to use Charleston County’s ArcGIS REST endpoints programmatically, especially for pulling parcel data for property research.
+This document explains how to use Charleston County's ArcGIS REST endpoints programmatically, especially for pulling parcel data for property research.
 
-Primary parcel service:
+---
+
+# Service Change Notice
+
+Charleston County migrated from the legacy parcel service to a newer service during development of this project.
+
+Legacy parcel service:
 
 ```text
 https://gisccapps.charlestoncounty.org/arcgis/rest/services/GIS_VIEWER/Parcel_Search/MapServer
 ```
 
-Parcel layer query endpoint:
+Current parcel service:
 
 ```text
-https://gisccapps.charlestoncounty.org/arcgis/rest/services/GIS_VIEWER/Parcel_Search/MapServer/4/query
+https://gisccapps.charlestoncounty.org/arcgis/rest/services/GIS_VIEWER/New_Parcel_Search/MapServer
+```
+
+Legacy parcel layer:
+
+```text
+MapServer/4
+```
+
+Current parcel layer:
+
+```text
+MapServer/61
+```
+
+Applications should not hardcode assumptions about layer IDs or field names. Charleston County has already changed both once.
+
+---
+
+# Current Production Endpoints
+
+## Service Metadata
+
+```text
+https://gisccapps.charlestoncounty.org/arcgis/rest/services/GIS_VIEWER/New_Parcel_Search/MapServer?f=pjson
+```
+
+## Parcel Layer Metadata
+
+```text
+https://gisccapps.charlestoncounty.org/arcgis/rest/services/GIS_VIEWER/New_Parcel_Search/MapServer/61?f=pjson
+```
+
+## Parcel Query Endpoint
+
+```text
+https://gisccapps.charlestoncounty.org/arcgis/rest/services/GIS_VIEWER/New_Parcel_Search/MapServer/61/query
 ```
 
 ---
 
-# 1. ArcGIS REST Structure
+# ArcGIS REST Structure
 
 ArcGIS Server is organized roughly like this:
 
@@ -26,12 +68,10 @@ ArcGIS Server is organized roughly like this:
     │      ├── Service/MapServer
     │      │      ├── Layer 0
     │      │      ├── Layer 1
-    │      │      └── Layer 4
+    │      │      └── Layer 61
 ```
 
 ## Folder
-
-A folder is just an organizational container.
 
 Example:
 
@@ -39,37 +79,31 @@ Example:
 GIS_VIEWER
 ```
 
-Folders group related services together.
-
-They are similar to directories or namespaces.
+Folders are organizational containers used to group services.
 
 ## Service
-
-A service is the actual GIS endpoint.
 
 Example:
 
 ```text
-Parcel_Search/MapServer
+New_Parcel_Search/MapServer
 ```
 
 A service can expose multiple layers.
 
 ## Layer
 
-A layer is similar to a table or dataset inside the service.
-
-For the parcel service:
+Example:
 
 ```text
-MapServer/4
+MapServer/61
 ```
 
-Layer `4` is the parcel layer.
+Layer 61 currently contains Charleston County parcel data.
 
 ## Query Operation
 
-To pull data from a layer, use:
+To retrieve data:
 
 ```text
 /query
@@ -78,90 +112,76 @@ To pull data from a layer, use:
 Full endpoint:
 
 ```text
-/MapServer/4/query
+/MapServer/61/query
 ```
 
 ---
 
-# 2. Useful Metadata URLs
+# Field Naming Differences
 
-## Service Metadata
-
-```text
-https://gisccapps.charlestoncounty.org/arcgis/rest/services/GIS_VIEWER/Parcel_Search/MapServer?f=pjson
-```
-
-Use this to inspect:
-
-- available layers
-- service capabilities
-- max record count
-- supported query formats
-
-## Parcel Layer Metadata
-
-```text
-https://gisccapps.charlestoncounty.org/arcgis/rest/services/GIS_VIEWER/Parcel_Search/MapServer/4?f=pjson
-```
-
-Use this to inspect:
-
-- field names
-- field types
-- geometry type
-- object ID field
-- supported query capabilities
-- max record count
-
----
-
-# 3. Important Parcel Fields
-
-The field names are verbose because they come from joined county datasets.
-
-## Technical ID
-
-```text
-FEATURES.SDE.P_POLY_PARCEL.OBJECTID
-```
-
-ArcGIS row ID.
-
-Useful for:
-
-- fetching by object ID
-- pagination strategies
-- deduping within one pull
-
-Do not rely on this as the permanent real-world parcel ID.
-
-## Parcel IDs
+The legacy parcel service returned fully-qualified joined field names:
 
 ```text
 FEATURES.SDE.P_POLY_PARCEL.PID
-FEATURES.SDE.P_POLY_PARCEL.GPIN
+FEATURES.SDE.CAMA.OWNER1
+FEATURES.SDE.CAMA.RECORDED_DATE
 ```
 
-Use these as long-term parcel identifiers.
-
-## Acreage
+The current service returns simplified field names:
 
 ```text
-FEATURES.SDE.P_POLY_PARCEL.ACRES_CAL
-FEATURES.SDE.CAMA.ACREAGE
+PID
+OWNER1
+RECORDED_DATE
 ```
 
-`ACRES_CAL` is calculated from GIS geometry.
+Example current response:
 
-`ACREAGE` is the tax/CAMA recorded acreage.
+```json
+{
+  "OBJECTID": 1,
+  "PID": "3970500692",
+  "OWNER1": "GLAVIS DANI LEIGH",
+  "SALE_PRICE": 270000.0,
+  "RECORDED_DATE": 1628726400000
+}
+```
 
-For practical filtering, start with `ACRES_CAL`.
+This significantly simplifies schema design.
+
+---
+
+# Important Current Fields
+
+## Technical Identifier
+
+```text
+OBJECTID
+```
+
+ArcGIS row identifier.
+
+Useful for:
+
+- pagination
+- deduplication
+- incremental crawling
+
+Do not treat as a permanent parcel identifier.
+
+## Parcel Identifier
+
+```text
+PID
+```
+
+Primary parcel identifier returned by the current service.
 
 ## Ownership
 
 ```text
-FEATURES.SDE.CAMA.OWNER1
-FEATURES.SDE.CAMA.OWNER2
+OWNER1
+OWNER2
 ```
 
 Useful for identifying:
@@ -170,717 +190,224 @@ Useful for identifying:
 - LLCs
 - trusts
 - estates
-- family ownership
+- corporate ownership
 
 ## Mailing Address
 
 ```text
-FEATURES.SDE.CAMA.MAIL_ST_NO
-FEATURES.SDE.CAMA.MAIL_ST_NAME
-FEATURES.SDE.CAMA.MAIL_ST_TYPE
-FEATURES.SDE.CAMA.MAIL_CITY
-FEATURES.SDE.CAMA.MAIL_STATE
-FEATURES.SDE.CAMA.MAIL_ZIP
-FEATURES.SDE.CAMA.MAIL_COUNTRY
+MAIL_ST_NO
+MAIL_ST_NAME
+MAIL_ST_TYPE
+MAIL_CITY
+MAIL_STATE
+MAIL_ZIP
+MAIL_COUNTRY
 ```
 
-These are extremely useful for detecting absentee ownership.
+Useful for absentee-owner analysis.
 
-A mailing address different from the property address can indicate:
-
-- absentee owner
-- rental/investment property
-- inherited property
-- owner moved away
-- business-owned parcel
-
-## Sale / Ownership Date
+## Acreage
 
 ```text
-FEATURES.SDE.CAMA.RECORDED_DATE
-FEATURES.SDE.CAMA.DOC_DATE
+ACREAGE
 ```
 
-`RECORDED_DATE` is usually the best proxy for ownership start date.
-
-Use it to calculate years owned.
+Current acreage value returned by the service.
 
 ## Sale Price
 
 ```text
-FEATURES.SDE.CAMA.SALE_PRICE
+SALE_PRICE
 ```
 
-Useful but not always reliable.
+Useful but should not be assumed to represent an arms-length transaction.
 
-Some transfers may be family transfers, deed corrections, estate transfers, or non-market transactions.
-
-## Deed Reference
+## Ownership Dates
 
 ```text
-FEATURES.SDE.CAMA.DEED_BOOK_PAGE
-FEATURES.SDE.CAMA.PLAT_BOOK_PAGE
+RECORDED_DATE
+DOC_DATE
 ```
 
-Useful for deeper research in register-of-deeds systems.
+Important for ownership-duration calculations.
 
 ---
 
-# 4. Core Query Parameters
+# ArcGIS Date Handling
 
-The `/query` endpoint accepts HTTP GET or POST parameters.
-
-## `f`
-
-Output format.
-
-Common values:
-
-```text
-json
-pjson
-geojson
-```
-
-Recommended default:
-
-```text
-f=json
-```
-
-Use `geojson` when pulling geometry for GIS tools.
-
----
-
-## `where`
-
-SQL-like filter.
-
-All records:
-
-```text
-where=1=1
-```
-
-Acreage filter:
-
-```text
-where=FEATURES.SDE.P_POLY_PARCEL.ACRES_CAL >= 0.75
-```
-
-Older ownership date example:
-
-```text
-where=FEATURES.SDE.CAMA.RECORDED_DATE < DATE '2005-01-01'
-```
-
-Date syntax can vary by ArcGIS backend. If date filters are unreliable, pull the data and filter locally in Python.
-
----
-
-## `outFields`
-
-Fields to return.
-
-All fields:
-
-```text
-outFields=*
-```
-
-Specific fields:
-
-```text
-outFields=FEATURES.SDE.CAMA.OWNER1,FEATURES.SDE.CAMA.RECORDED_DATE
-```
-
-For bulk pulls, avoid `*` once you know the fields you need.
-
----
-
-## `returnGeometry`
-
-Whether to include parcel shapes.
-
-```text
-returnGeometry=false
-```
-
-Recommended for first-pass data pulls.
-
-Parcel polygons are heavy.
-
-Use:
-
-```text
-returnGeometry=true
-```
-
-only when you need shapes for mapping or spatial filtering.
-
----
-
-## `outSR`
-
-Output spatial reference.
-
-For normal latitude/longitude:
-
-```text
-outSR=4326
-```
-
-Use this when returning geometry or GeoJSON.
-
----
-
-## `resultOffset`
-
-Starting row for pagination.
-
-Examples:
-
-```text
-resultOffset=0
-resultOffset=1000
-resultOffset=2000
-```
-
----
-
-## `resultRecordCount`
-
-Number of records to return in one page.
-
-Typical max:
-
-```text
-resultRecordCount=1000
-```
-
-Check layer metadata for the actual max record count.
-
----
-
-## `returnCountOnly`
-
-Returns only the count of matching records.
+Charleston County currently returns ArcGIS dates as Unix epoch milliseconds.
 
 Example:
 
 ```text
-returnCountOnly=true
+1628726400000
 ```
 
-Useful for testing filters.
-
----
-
-## `returnIdsOnly`
-
-Returns only object IDs for matching records.
-
-Example:
-
-```text
-returnIdsOnly=true
-```
-
-Very useful for reliable bulk pulling.
-
-Object ID queries are often not limited the same way full feature responses are.
-
----
-
-## `objectIds`
-
-Fetch specific records by object ID.
-
-Example:
-
-```text
-objectIds=123,456,789
-```
-
-Useful after calling `returnIdsOnly=true`.
-
----
-
-## `orderByFields`
-
-Sort results.
-
-Example:
-
-```text
-orderByFields=FEATURES.SDE.CAMA.RECORDED_DATE ASC
-```
-
-or:
-
-```text
-orderByFields=FEATURES.SDE.P_POLY_PARCEL.ACRES_CAL DESC
-```
-
----
-
-# 5. Basic Query Example
-
-Pull five parcel records without geometry:
-
-```text
-https://gisccapps.charlestoncounty.org/arcgis/rest/services/GIS_VIEWER/Parcel_Search/MapServer/4/query?where=1%3D1&outFields=*&returnGeometry=false&f=json&resultRecordCount=5
-```
-
-Python:
+Convert using:
 
 ```python
-import requests
+from datetime import datetime, timezone
 
-url = "https://gisccapps.charlestoncounty.org/arcgis/rest/services/GIS_VIEWER/Parcel_Search/MapServer/4/query"
+datetime.fromtimestamp(
+    1628726400000 / 1000,
+    tz=timezone.utc,
+)
+```
 
+Result:
+
+```text
+2021-08-12 00:00:00+00:00
+```
+
+Never assume ArcGIS date fields are ISO-8601 strings.
+
+---
+
+# Current Service Limits
+
+Current metadata reports:
+
+```text
+maxRecordCount = 2000
+```
+
+Recommended page size:
+
+```text
+resultRecordCount=2000
+```
+
+Always verify against service metadata because administrators can change this value.
+
+---
+
+# Recommended Startup Validation
+
+Before beginning a full crawl:
+
+1. Query a single parcel.
+2. Verify at least one feature is returned.
+3. Verify OBJECTID exists.
+4. Validate against local Pydantic schemas.
+5. Fail fast if validation fails.
+
+Example:
+
+```python
 params = {
-    "f": "json",
     "where": "1=1",
     "outFields": "*",
-    "returnGeometry": "false",
-    "resultRecordCount": 5,
-}
-
-r = requests.get(url, params=params, timeout=30)
-r.raise_for_status()
-data = r.json()
-
-for feature in data["features"]:
-    print(feature["attributes"])
-```
-
----
-
-# 6. Pagination With `resultOffset`
-
-Use this for a simple first ingestion pipeline.
-
-```python
-import requests
-import pandas as pd
-
-url = "https://gisccapps.charlestoncounty.org/arcgis/rest/services/GIS_VIEWER/Parcel_Search/MapServer/4/query"
-
-page_size = 1000
-offset = 0
-rows = []
-
-while True:
-    params = {
-        "f": "json",
-        "where": "1=1",
-        "outFields": "*",
-        "returnGeometry": "false",
-        "resultOffset": offset,
-        "resultRecordCount": page_size,
-    }
-
-    r = requests.get(url, params=params, timeout=30)
-    r.raise_for_status()
-    data = r.json()
-
-    features = data.get("features", [])
-    if not features:
-        break
-
-    rows.extend(feature["attributes"] for feature in features)
-
-    if len(features) < page_size:
-        break
-
-    offset += page_size
-
-    print(f"Pulled {len(rows)} records")
-
-df = pd.DataFrame(rows)
-df.to_csv("charleston_parcels.csv", index=False)
-```
-
----
-
-# 7. More Reliable Bulk Pull: Object IDs First
-
-This is better for larger production-style pulls.
-
-Step 1: get all matching object IDs.
-
-Step 2: fetch chunks by `objectIds`.
-
-```python
-import requests
-import pandas as pd
-
-url = "https://gisccapps.charlestoncounty.org/arcgis/rest/services/GIS_VIEWER/Parcel_Search/MapServer/4/query"
-
-session = requests.Session()
-
-id_params = {
+    "returnGeometry": False,
+    "resultRecordCount": 1,
     "f": "json",
+}
+```
+
+This protects the crawler from silent county schema changes.
+
+---
+
+# Basic Query Example
+
+```python
+import requests
+
+url = (
+    "https://gisccapps.charlestoncounty.org/"
+    "arcgis/rest/services/"
+    "GIS_VIEWER/New_Parcel_Search/"
+    "MapServer/61/query"
+)
+
+params = {
     "where": "1=1",
-    "returnIdsOnly": "true",
-}
-
-r = session.get(url, params=id_params, timeout=30)
-r.raise_for_status()
-object_ids = r.json()["objectIds"]
-
-print(f"Found {len(object_ids)} object IDs")
-
-
-def chunks(items, size):
-    for i in range(0, len(items), size):
-        yield items[i:i + size]
-
-rows = []
-
-for chunk in chunks(object_ids, 1000):
-    params = {
-        "f": "json",
-        "objectIds": ",".join(map(str, chunk)),
-        "outFields": "*",
-        "returnGeometry": "false",
-    }
-
-    r = session.get(url, params=params, timeout=30)
-    r.raise_for_status()
-    data = r.json()
-
-    rows.extend(feature["attributes"] for feature in data.get("features", []))
-    print(f"Pulled {len(rows)} records")
-
-df = pd.DataFrame(rows)
-df.to_csv("charleston_parcels.csv", index=False)
-```
-
----
-
-# 8. Spatial Query By Bounding Box
-
-Use this to pull parcels within a defined area.
-
-Bounding box format:
-
-```text
-xmin,ymin,xmax,ymax
-```
-
-For longitude/latitude, that means:
-
-```text
-west,south,east,north
-```
-
-Example:
-
-```python
-import requests
-import pandas as pd
-
-url = "https://gisccapps.charlestoncounty.org/arcgis/rest/services/GIS_VIEWER/Parcel_Search/MapServer/4/query"
-
-bbox = "-79.99,32.70,-79.92,32.78"
-
-params = {
+    "outFields": "*",
+    "returnGeometry": False,
+    "resultRecordCount": 1,
     "f": "json",
-    "where": "FEATURES.SDE.P_POLY_PARCEL.ACRES_CAL >= 0.75",
-    "outFields": "*",
-    "returnGeometry": "false",
-    "geometry": bbox,
-    "geometryType": "esriGeometryEnvelope",
-    "inSR": "4326",
-    "spatialRel": "esriSpatialRelIntersects",
-    "resultRecordCount": 1000,
 }
 
-r = requests.get(url, params=params, timeout=30)
-r.raise_for_status()
-data = r.json()
+response = requests.get(url, params=params, timeout=30)
+response.raise_for_status()
 
-rows = [feature["attributes"] for feature in data.get("features", [])]
-df = pd.DataFrame(rows)
-```
+data = response.json()
 
-This pulls parcels that intersect the bounding box.
-
-It may include parcels partially outside your exact target area.
-
----
-
-# 9. Spatial Query With Geometry Returned
-
-Use this when you want to map parcels or filter more precisely in GeoPandas.
-
-```python
-params = {
-    "f": "geojson",
-    "where": "FEATURES.SDE.P_POLY_PARCEL.ACRES_CAL >= 0.75",
-    "outFields": "*",
-    "returnGeometry": "true",
-    "outSR": "4326",
-    "geometry": "-79.99,32.70,-79.92,32.78",
-    "geometryType": "esriGeometryEnvelope",
-    "inSR": "4326",
-    "spatialRel": "esriSpatialRelIntersects",
-    "resultRecordCount": 1000,
-}
-```
-
-For GIS analysis, save as GeoJSON:
-
-```python
-import json
-
-with open("parcels.geojson", "w") as f:
-    json.dump(data, f)
+print(data["features"][0]["attributes"])
 ```
 
 ---
 
-# 10. Filtering By Acreage
+# Lessons Learned During Development
 
-Use the GIS-calculated acreage field first:
-
-```text
-FEATURES.SDE.P_POLY_PARCEL.ACRES_CAL
-```
-
-Examples:
-
-```text
-FEATURES.SDE.P_POLY_PARCEL.ACRES_CAL >= 0.5
-```
-
-```text
-FEATURES.SDE.P_POLY_PARCEL.ACRES_CAL >= 1.0
-```
-
-```text
-FEATURES.SDE.P_POLY_PARCEL.ACRES_CAL BETWEEN 0.5 AND 5
-```
-
-If `BETWEEN` is unsupported, use:
-
-```text
-FEATURES.SDE.P_POLY_PARCEL.ACRES_CAL >= 0.5 AND FEATURES.SDE.P_POLY_PARCEL.ACRES_CAL <= 5
-```
+1. Charleston County changed parcel services from `Parcel_Search` to `New_Parcel_Search`.
+2. The parcel layer moved from Layer 4 to Layer 61.
+3. Field names were simplified dramatically.
+4. ArcGIS date fields are returned as epoch milliseconds.
+5. The ArcGIS Web Adaptor can occasionally return HTML error pages when backend GIS servers are unavailable.
+6. Production crawlers should validate the service before beginning large data pulls.
+7. Schema validation tests using real API responses are invaluable for detecting county-side changes.
 
 ---
 
-# 11. Ownership Date / Years Owned
-
-Use:
-
-```text
-FEATURES.SDE.CAMA.RECORDED_DATE
-```
-
-Convert in Python.
-
-ArcGIS date fields may come back as epoch milliseconds.
-
-```python
-import pandas as pd
-
-col = "FEATURES.SDE.CAMA.RECORDED_DATE"
-
-df["recorded_date"] = pd.to_datetime(df[col], unit="ms", errors="coerce")
-
-df["years_owned"] = (
-    (pd.Timestamp.today() - df["recorded_date"]).dt.days / 365.25
-).round(1)
-```
-
-If the date already comes back as a string, use:
-
-```python
-df["recorded_date"] = pd.to_datetime(df[col], errors="coerce")
-```
-
-Then filter:
-
-```python
-long_owned = df[df["years_owned"] >= 20]
-```
-
----
-
-# 12. Candidate Scoring Ideas
-
-For your utility property search, useful signals include:
-
-| Signal | Why it matters |
-|---|---|
-| Owned 20+ years | High equity, possible aging owner |
-| Mailing address differs | Absentee ownership |
-| Out-of-state mailing address | Possible low local involvement |
-| Low improvement value | Underutilized site |
-| Large parcel | More utility |
-| Existing structure | Useful workshop/storage potential |
-| Commercial/industrial use | Better fit for storage/workshop |
-| No recent investment | Possible operational fatigue |
-
-Simple scoring example:
-
-```python
-df["score"] = 0
-
-df.loc[df["years_owned"] >= 20, "score"] += 30
-df.loc[df["FEATURES.SDE.P_POLY_PARCEL.ACRES_CAL"] >= 0.75, "score"] += 10
-df.loc[df["FEATURES.SDE.CAMA.MAIL_STATE"].ne("SC"), "score"] += 10
-```
-
-You will need parcel situs/property address fields from another layer or enrichment source to compare mailing address vs property address.
-
----
-
-# 13. Recommended Development Workflow
+# Recommended Development Workflow
 
 ## Step 1
-Inspect layer metadata:
+
+Inspect service metadata:
 
 ```text
-/MapServer/4?f=pjson
+/MapServer?f=pjson
 ```
 
 ## Step 2
-Pull a small sample:
+
+Inspect layer metadata:
 
 ```text
-where=1=1
-resultRecordCount=5
-returnGeometry=false
+/MapServer/61?f=pjson
 ```
 
 ## Step 3
-Build a local schema mapping.
 
-Example:
+Pull a single record:
 
-```python
-FIELD_MAP = {
-    "FEATURES.SDE.P_POLY_PARCEL.PID": "pid",
-    "FEATURES.SDE.P_POLY_PARCEL.GPIN": "gpin",
-    "FEATURES.SDE.P_POLY_PARCEL.ACRES_CAL": "acres_cal",
-    "FEATURES.SDE.CAMA.OWNER1": "owner1",
-    "FEATURES.SDE.CAMA.OWNER2": "owner2",
-    "FEATURES.SDE.CAMA.MAIL_CITY": "mail_city",
-    "FEATURES.SDE.CAMA.MAIL_STATE": "mail_state",
-    "FEATURES.SDE.CAMA.RECORDED_DATE": "recorded_date_raw",
-    "FEATURES.SDE.CAMA.SALE_PRICE": "sale_price",
-}
-
-df = df.rename(columns=FIELD_MAP)
+```text
+where=1=1
+resultRecordCount=1
+returnGeometry=false
 ```
 
 ## Step 4
-Pull your target area only.
 
-Start with bounding boxes.
+Update schema mappings and validation tests.
 
 ## Step 5
-Store results locally.
 
-Good options:
-
-- CSV for quick experiments
-- SQLite for simple local database
-- DuckDB for analytics
-- PostgreSQL/PostGIS for serious spatial work
-- Parquet for efficient file storage
+Validate the service before crawling.
 
 ## Step 6
-Add scoring and manual review.
 
-Do not trust the score blindly.
+Run paginated crawls.
 
-Use it to prioritize field inspection.
+## Step 7
 
----
-
-# 14. Practical Warnings
-
-## Do not bulk pull geometry unless needed
-
-This is slow and heavy:
-
-```text
-outFields=*
-returnGeometry=true
-```
-
-Start with attributes only.
-
-## Do not treat OBJECTID as permanent
-
-Use OBJECTID for fetching.
-
-Use PID/GPIN for long-term parcel tracking.
-
-## County schemas may change
-
-Keep field mapping isolated in one place.
-
-## Recorded date is not perfect
-
-A recent recorded date can reflect:
-
-- trust transfer
-- family transfer
-- estate update
-- LLC restructuring
-- deed correction
-
-Manual review still matters.
-
-## Public data does not equal seller motivation
-
-Use the data to rank probabilities, not to assume distress.
+Store results in PostgreSQL for analysis.
 
 ---
 
-# 15. Useful Official Documentation
+# Useful Official Documentation
 
-Esri ArcGIS REST API documentation:
+ArcGIS REST API:
 
-```text
 https://developers.arcgis.com/rest/
-```
 
-Query Feature Service Layer reference:
+Query Feature Layer:
 
-```text
 https://developers.arcgis.com/rest/services-reference/enterprise/query-feature-service-layer/
-```
 
-Query features guide:
+Query Features Guide:
 
-```text
 https://developers.arcgis.com/documentation/portal-and-data-services/data-services/feature-services/query-features/
-```
 
-Even though Charleston uses `MapServer`, the query parameters are very similar across ArcGIS REST query endpoints.
-
----
-
-# 16. Best Starting Point For Your Project
-
-Start with this pipeline:
-
-1. Define a bounding box around the nearby areas that are actually useful to you.
-2. Query parcels with `ACRES_CAL >= 0.5` or `>= 0.75`.
-3. Pull attributes only.
-4. Calculate years owned from `RECORDED_DATE`.
-5. Rank by ownership duration, acreage, owner type, and mailing address.
-6. Manually inspect the top 25–50 properties.
-7. Only then add geometry, flood, zoning, permit, and tax enrichment.
-
-The goal is not to scrape everything.
-
-The goal is to build a focused local intelligence system for properties that could realistically become your nearby workshop/storage site.
-
+Even though Charleston County exposes a MapServer endpoint, the query parameters are nearly identical to FeatureServer query operations.
