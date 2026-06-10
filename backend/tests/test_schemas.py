@@ -7,248 +7,78 @@ from app.models import ArcGISResponse
 
 
 @pytest.fixture
-def raw_charleston_county_json():
-    """Fixture providing a realistic, comprehensive mock payload from the live server."""
+def raw_parcel_response():
     return {
-        "displayFieldName": "FEATURES.SDE.P_POLY_PARCEL.PID",
+        "displayFieldName": "PROP_ST_NAME",
         "fieldAliases": {
-            "FEATURES.SDE.P_POLY_PARCEL.OBJECTID": "OBJECTID",
-            "FEATURES.SDE.P_POLY_PARCEL.PID": "PID",
-            "FEATURES.SDE.P_POLY_PARCEL.GPIN": "GPIN",
-            "FEATURES.SDE.P_POLY_PARCEL.ACRES_CAL": "Calculated Acres",
-            "FEATURES.SDE.CAMA.OWNER1": "OWNER1",
-            "FEATURES.SDE.CAMA.OWNER2": "OWNER2",
-            "FEATURES.SDE.CAMA.TAX_DISTRICT": "TAX DISTRICT",
-            "FEATURES.SDE.CAMA.CLASS_CODE": "CLASS CODE",
-            "FEATURES.SDE.CAMA.MAIL_ST_NO": "MAIL_ST_NO",
-            "FEATURES.SDE.CAMA.MAIL_ST_NAME": "MAIL_ST_NAME",
-            "FEATURES.SDE.CAMA.MAIL_ST_TYPE": "MAIL_ST_TYPE",
-            "FEATURES.SDE.CAMA.MAIL_2ND_ADDR": "MAIL_2ND_ADDR",
-            "FEATURES.SDE.CAMA.MAIL_2ND_ADDT": "MAIL_2ND_ADDT",
-            "FEATURES.SDE.CAMA.MAIL_CITY": "MAIL_CITY",
-            "FEATURES.SDE.CAMA.MAIL_STATE": "MAIL_STATE",
-            "FEATURES.SDE.CAMA.MAIL_ZIP": "MAIL_ZIP",
-            "FEATURES.SDE.CAMA.MAIL_COUNTRY": "MAIL_COUNTRY",
-            "FEATURES.SDE.CAMA.LEGAL_DESCR": "LEGAL DESCRIPTION",
-            "FEATURES.SDE.CAMA.SUBDIVISION": "SUBDIVISION",
-            "FEATURES.SDE.CAMA.ACREAGE": "DEEDED ACREAGE",
-            "FEATURES.SDE.CAMA.LEGAL_RESIDENCE": "LEGAL RESIDENCE",
-            "FEATURES.SDE.CAMA.OTHER": "OTHER",
-            "FEATURES.SDE.CAMA.AGR": "AGR",
-            "FEATURES.SDE.CAMA.DEED_BOOK_PAGE": "DEED BOOK PAGE",
-            "FEATURES.SDE.CAMA.PLAT_BOOK_PAGE": "PLAT BOOK PAGE",
-            "FEATURES.SDE.CAMA.SALE_PRICE": "SALE_PRICE",
-            "FEATURES.SDE.CAMA.RECORDED_DATE": "RECORDED_DATE",
-            "FEATURES.SDE.CAMA.DOC_DATE": "DOC_DATE",
+            "OBJECTID": "OBJECTID",
+            "PID": "PID",
+            "OWNER1": "OWNER1",
+            "OWNER2": "OWNER2",
+            "TAX_DISTRICT": "TAX DISTRICT",
+            "CLASS_CODE": "CLASS CODE",
+            "MAIL_ST_NO": "MAIL_ST_NO",
+            "MAIL_ST_NAME": "MAIL_ST_NAME",
+            "MAIL_ST_TYPE": "MAIL_ST_TYPE",
+            "MAIL_2ND_ADDR": "MAIL_2ND_ADDR",
+            "MAIL_2ND_ADDT": "MAIL_2ND_ADDT",
+            "MAIL_CITY": "MAIL_CITY",
+            "MAIL_STATE": "MAIL_STATE",
+            "MAIL_ZIP": "MAIL_ZIP",
+            "MAIL_COUNTRY": "MAIL_COUNTRY",
+            "LEGAL_DESCR": "LEGAL DESCRIPTION",
+            "SUBDIVISION": "SUBDIVISION",
+            "ACREAGE": "DEEDED ACREAGE",
+            "LEGAL_RESIDENCE": "LEGAL RESIDENCE",
+            "OTHER": "OTHER",
+            "AGR": "AGR",
+            "DEED_BOOK_PAGE": "DEED BOOK PAGE",
+            "PLAT_BOOK_PAGE": "PLAT BOOK PAGE",
+            "SALE_PRICE": "SALE_PRICE",
+            "RECORDED_DATE": "RECORDED_DATE",
+            "DOC_DATE": "DOC_DATE",
         },
         "geometryType": "esriGeometryPolygon",
         "spatialReference": {"wkid": 2273, "latestWkid": 2273},
-        "fields": [
-            {
-                "name": "FEATURES.SDE.P_POLY_PARCEL.OBJECTID",
-                "type": "esriFieldTypeOID",
-                "alias": "OBJECTID",
-            },
-            {
-                "name": "FEATURES.SDE.P_POLY_PARCEL.PID",
-                "type": "esriFieldTypeString",
-                "alias": "PID",
-                "length": 15,
-            },
-            {
-                "name": "FEATURES.SDE.P_POLY_PARCEL.GPIN",
-                "type": "esriFieldTypeString",
-                "alias": "GPIN",
-                "length": 16,
-            },
-            {
-                "name": "FEATURES.SDE.P_POLY_PARCEL.ACRES_CAL",
-                "type": "esriFieldTypeDouble",
-                "alias": "Calculated Acres",
-            },
-            {
-                "name": "FEATURES.SDE.CAMA.OWNER1",
-                "type": "esriFieldTypeString",
-                "alias": "OWNER1",
-                "length": 255,
-            },
-            {
-                "name": "FEATURES.SDE.CAMA.OWNER2",
-                "type": "esriFieldTypeString",
-                "alias": "OWNER2",
-                "length": 255,
-            },
-            {
-                "name": "FEATURES.SDE.CAMA.TAX_DISTRICT",
-                "type": "esriFieldTypeString",
-                "alias": "TAX DISTRICT",
-                "length": 255,
-            },
-            {
-                "name": "FEATURES.SDE.CAMA.CLASS_CODE",
-                "type": "esriFieldTypeString",
-                "alias": "CLASS CODE",
-                "length": 255,
-            },
-            {
-                "name": "FEATURES.SDE.CAMA.MAIL_ST_NO",
-                "type": "esriFieldTypeString",
-                "alias": "MAIL_ST_NO",
-                "length": 255,
-            },
-            {
-                "name": "FEATURES.SDE.CAMA.MAIL_ST_NAME",
-                "type": "esriFieldTypeString",
-                "alias": "MAIL_ST_NAME",
-                "length": 255,
-            },
-            {
-                "name": "FEATURES.SDE.CAMA.MAIL_ST_TYPE",
-                "type": "esriFieldTypeString",
-                "alias": "MAIL_ST_TYPE",
-                "length": 255,
-            },
-            {
-                "name": "FEATURES.SDE.CAMA.MAIL_2ND_ADDR",
-                "type": "esriFieldTypeString",
-                "alias": "MAIL_2ND_ADDR",
-                "length": 255,
-            },
-            {
-                "name": "FEATURES.SDE.CAMA.MAIL_2ND_ADDT",
-                "type": "esriFieldTypeString",
-                "alias": "MAIL_2ND_ADDT",
-                "length": 255,
-            },
-            {
-                "name": "FEATURES.SDE.CAMA.MAIL_CITY",
-                "type": "esriFieldTypeString",
-                "alias": "MAIL_CITY",
-                "length": 255,
-            },
-            {
-                "name": "FEATURES.SDE.CAMA.MAIL_STATE",
-                "type": "esriFieldTypeString",
-                "alias": "MAIL_STATE",
-                "length": 255,
-            },
-            {
-                "name": "FEATURES.SDE.CAMA.MAIL_ZIP",
-                "type": "esriFieldTypeString",
-                "alias": "MAIL_ZIP",
-                "length": 255,
-            },
-            {
-                "name": "FEATURES.SDE.CAMA.MAIL_COUNTRY",
-                "type": "esriFieldTypeString",
-                "alias": "MAIL_COUNTRY",
-                "length": 255,
-            },
-            {
-                "name": "FEATURES.SDE.CAMA.LEGAL_DESCR",
-                "type": "esriFieldTypeString",
-                "alias": "LEGAL DESCRIPTION",
-                "length": 255,
-            },
-            {
-                "name": "FEATURES.SDE.CAMA.SUBDIVISION",
-                "type": "esriFieldTypeString",
-                "alias": "SUBDIVISION",
-                "length": 255,
-            },
-            {
-                "name": "FEATURES.SDE.CAMA.ACREAGE",
-                "type": "esriFieldTypeDouble",
-                "alias": "DEEDED ACREAGE",
-            },
-            {
-                "name": "FEATURES.SDE.CAMA.LEGAL_RESIDENCE",
-                "type": "esriFieldTypeString",
-                "alias": "LEGAL RESIDENCE",
-                "length": 255,
-            },
-            {
-                "name": "FEATURES.SDE.CAMA.OTHER",
-                "type": "esriFieldTypeString",
-                "alias": "OTHER",
-                "length": 255,
-            },
-            {
-                "name": "FEATURES.SDE.CAMA.AGR",
-                "type": "esriFieldTypeString",
-                "alias": "AGR",
-                "length": 255,
-            },
-            {
-                "name": "FEATURES.SDE.CAMA.DEED_BOOK_PAGE",
-                "type": "esriFieldTypeString",
-                "alias": "DEED BOOK PAGE",
-                "length": 255,
-            },
-            {
-                "name": "FEATURES.SDE.CAMA.PLAT_BOOK_PAGE",
-                "type": "esriFieldTypeString",
-                "alias": "PLAT BOOK PAGE",
-                "length": 255,
-            },
-            {
-                "name": "FEATURES.SDE.CAMA.SALE_PRICE",
-                "type": "esriFieldTypeDouble",
-                "alias": "SALE_PRICE",
-            },
-            {
-                "name": "FEATURES.SDE.CAMA.RECORDED_DATE",
-                "type": "esriFieldTypeDate",
-                "alias": "RECORDED_DATE",
-                "length": 8,
-            },
-            {
-                "name": "FEATURES.SDE.CAMA.DOC_DATE",
-                "type": "esriFieldTypeDate",
-                "alias": "DOC_DATE",
-                "length": 8,
-            },
-        ],
+        "fields": [],
         "features": [
             {
                 "attributes": {
-                    "FEATURES.SDE.P_POLY_PARCEL.OBJECTID": 1,
-                    "FEATURES.SDE.P_POLY_PARCEL.PID": "0230000028",
-                    "FEATURES.SDE.P_POLY_PARCEL.GPIN": " ",
-                    "FEATURES.SDE.P_POLY_PARCEL.ACRES_CAL": 2.87261319,
-                    "FEATURES.SDE.CAMA.OWNER1": "BYARS WILLIAM CONRAD Jr",
-                    "FEATURES.SDE.CAMA.OWNER2": "",
-                    "FEATURES.SDE.CAMA.TAX_DISTRICT": "8-1             ",
-                    "FEATURES.SDE.CAMA.CLASS_CODE": "905 - VAC-RES-LOT                                               ",
-                    "FEATURES.SDE.CAMA.MAIL_ST_NO": "178",
-                    "FEATURES.SDE.CAMA.MAIL_ST_NAME": "SHEALY                                                          ",
-                    "FEATURES.SDE.CAMA.MAIL_ST_TYPE": "DR      ",
-                    "FEATURES.SDE.CAMA.MAIL_2ND_ADDR": "        ",
-                    "FEATURES.SDE.CAMA.MAIL_2ND_ADDT": "        ",
-                    "FEATURES.SDE.CAMA.MAIL_CITY": "PROSPERITY                      ",
-                    "FEATURES.SDE.CAMA.MAIL_STATE": "SC  ",
-                    "FEATURES.SDE.CAMA.MAIL_ZIP": "29127           ",
-                    "FEATURES.SDE.CAMA.MAIL_COUNTRY": "                                ",
-                    "FEATURES.SDE.CAMA.LEGAL_DESCR": "PART LT 28",
-                    "FEATURES.SDE.CAMA.SUBDIVISION": " ",
-                    "FEATURES.SDE.CAMA.ACREAGE": 2.49,
-                    "FEATURES.SDE.CAMA.LEGAL_RESIDENCE": "N",
-                    "FEATURES.SDE.CAMA.OTHER": "N",
-                    "FEATURES.SDE.CAMA.AGR": "N",
-                    "FEATURES.SDE.CAMA.DEED_BOOK_PAGE": "1323-078",
-                    "FEATURES.SDE.CAMA.PLAT_BOOK_PAGE": " B-58 ",
-                    "FEATURES.SDE.CAMA.SALE_PRICE": 208500.0,
-                    "FEATURES.SDE.CAMA.RECORDED_DATE": 1751414400000,
-                    "FEATURES.SDE.CAMA.DOC_DATE": 1751241600000,
+                    "OBJECTID": 1,
+                    "PID": "3970500692",
+                    "OWNER1": "GLAVIS DANI LEIGH",
+                    "OWNER2": "",
+                    "TAX_DISTRICT": "4-3             ",
+                    "CLASS_CODE": "101 - RESID-SFR                                                 ",
+                    "MAIL_ST_NO": "7637",
+                    "MAIL_ST_NAME": "HIGH MAPLE CIRCLE                                               ",
+                    "MAIL_ST_TYPE": "        ",
+                    "MAIL_2ND_ADDR": "        ",
+                    "MAIL_2ND_ADDT": "        ",
+                    "MAIL_CITY": "NORTH CHARLESTON                ",
+                    "MAIL_STATE": "SC  ",
+                    "MAIL_ZIP": "29418           ",
+                    "MAIL_COUNTRY": "                                ",
+                    "LEGAL_DESCR": "LOT 37",
+                    "SUBDIVISION": " ",
+                    "ACREAGE": 0.16,
+                    "LEGAL_RESIDENCE": "Y",
+                    "OTHER": "Y",
+                    "AGR": "N",
+                    "DEED_BOOK_PAGE": "1022-581",
+                    "PLAT_BOOK_PAGE": " XXX-L110001 ",
+                    "SALE_PRICE": 270000.0,
+                    "RECORDED_DATE": 1628726400000,
+                    "DOC_DATE": 1628640000000,
                 },
                 "geometry": {
                     "rings": [
                         [
-                            [2214102.0557660758, 255385.6252091974],
-                            [2213689.9006398916, 255320.85593879223],
-                            [2213549.3368730247, 255495.90844611824],
-                            [2213764.9040246904, 255705.36765450239],
-                            [2214102.0557660758, 255385.6252091974],
+                            [2282972.5878063738, 394271.15339459479],
+                            [2282913.8214494437, 394291.16423550248],
+                            [2282948.4476482868, 394398.45847891271],
+                            [2283007.2628900707, 394378.59114645422],
+                            [2282972.5878063738, 394271.15339459479],
                         ]
                     ]
                 },
@@ -258,86 +88,82 @@ def raw_charleston_county_json():
     }
 
 
-def test_full_pipeline_deserialization(raw_charleston_county_json):
-    """Verifies that root fields are filtered out and child models parse properly."""
-    # ACT
-    response = ArcGISResponse.model_validate(raw_charleston_county_json)
+def test_full_pipeline_deserialization(raw_parcel_response):
+    response = ArcGISResponse.model_validate(raw_parcel_response)
 
-    # ASSERT
-    assert len(response.features) == 1
     feature = response.features[0]
+    attrs = feature.attributes
 
-    # Verify Geometry dictionary was carried over untouched
-    assert "rings" in feature.geometry
-    assert len(feature.geometry["rings"][0]) == 5
+    assert response.exceededTransferLimit is True
+    assert attrs.objectid == 1
+    assert attrs.pid == "3970500692"
+    assert attrs.owner1 == "GLAVIS DANI LEIGH"
+    assert attrs.acreage == 0.16
+    assert attrs.sale_price == 270000.0
 
 
-def test_alias_mapping_and_primitive_types(raw_charleston_county_json):
+def test_alias_mapping_and_primitive_types(raw_parcel_response):
     """Ensures raw dot-notation keys accurately map to snake_case attributes."""
-    response = ArcGISResponse.model_validate(raw_charleston_county_json)
+    response = ArcGISResponse.model_validate(raw_parcel_response)
     attrs = response.features[0].attributes
 
-    assert attrs.features_sde_p_poly_parcel_objectid == 1
-    assert attrs.features_sde_p_poly_parcel_acres_cal == 2.87261319
-    assert attrs.features_sde_cama_sale_price == 208500.0
+    assert attrs.objectid == 1
+    assert attrs.sale_price == 270000.0
 
 
-def test_string_whitespace_and_empty_space_stripping(raw_charleston_county_json):
+def test_string_whitespace_and_empty_space_stripping(raw_parcel_response):
     """Ensures blank fields convert to None and text fields strip extra padding."""
-    response = ArcGISResponse.model_validate(raw_charleston_county_json)
+    response = ArcGISResponse.model_validate(raw_parcel_response)
     attrs = response.features[0].attributes
 
     # Truncated or clean values
-    assert attrs.features_sde_cama_owner1 == "BYARS WILLIAM CONRAD Jr"
-    assert attrs.features_sde_cama_tax_district == "8-1"
-    assert attrs.features_sde_cama_class_code == "905 - VAC-RES-LOT"
-    assert attrs.features_sde_cama_mail_st_name == "SHEALY"
-    assert attrs.features_sde_cama_mail_st_type == "DR"
-    assert attrs.features_sde_cama_mail_city == "PROSPERITY"
-    assert attrs.features_sde_cama_mail_state == "SC"
-    assert attrs.features_sde_cama_mail_zip == "29127"
+    assert attrs.owner1 == "GLAVIS DANI LEIGH"
+    assert attrs.tax_district == "4-3"
+    assert attrs.class_code == "101 - RESID-SFR"
+    assert attrs.mail_st_name == "HIGH MAPLE CIRCLE"
+    assert attrs.mail_city == "NORTH CHARLESTON"
+    assert attrs.mail_state == "SC"
+    assert attrs.mail_zip == "29418"
     assert (
-        attrs.features_sde_cama_plat_book_page == "B-58"
+        attrs.plat_book_page == "XXX-L110001"
     )  # Internal spaces kept, padding removed
 
     # Space strings or empty quotes converted completely to None
-    assert attrs.features_sde_p_poly_parcel_gpin is None
-    assert attrs.features_sde_cama_owner2 is None
-    assert attrs.features_sde_cama_mail_2nd_addr is None
-    assert attrs.features_sde_cama_mail_2nd_addt is None
-    assert attrs.features_sde_cama_mail_country is None
-    assert attrs.features_sde_cama_subdivision is None
+    assert attrs.mail_st_type is None
+    assert attrs.owner2 is None
+    assert attrs.mail_2nd_addr is None
+    assert attrs.mail_2nd_addt is None
+    assert attrs.mail_country is None
+    assert attrs.subdivision is None
 
 
-def test_epoch_milliseconds_transform_to_utc_datetime(raw_charleston_county_json):
+def test_epoch_milliseconds_transform_to_utc_datetime(raw_parcel_response):
     """Verifies huge bigint timestamps become valid timezone-aware datetimes."""
-    response = ArcGISResponse.model_validate(raw_charleston_county_json)
+    response = ArcGISResponse.model_validate(raw_parcel_response)
     attrs = response.features[0].attributes
 
-    # Expected Values computed from: value / 1000
-    expected_recorded = datetime.fromtimestamp(1751414400, tz=timezone.utc)
-    expected_doc = datetime.fromtimestamp(1751241600, tz=timezone.utc)
+    raw_recorded = raw_parcel_response["features"][0]["attributes"]["RECORDED_DATE"]
+    raw_doc = raw_parcel_response["features"][0]["attributes"]["DOC_DATE"]
 
-    assert isinstance(attrs.features_sde_cama_recorded_date, datetime)
-    assert attrs.features_sde_cama_recorded_date.tzinfo == timezone.utc
-    assert attrs.features_sde_cama_recorded_date == expected_recorded
+    assert raw_recorded == 1628726400000
+    assert raw_doc == 1628640000000
 
-    assert isinstance(attrs.features_sde_cama_doc_date, datetime)
-    assert attrs.features_sde_cama_doc_date.tzinfo == timezone.utc
-    assert attrs.features_sde_cama_doc_date == expected_doc
+    expected_recorded = datetime.fromtimestamp(raw_recorded / 1000, tz=timezone.utc)
+    expected_doc = datetime.fromtimestamp(raw_doc / 1000, tz=timezone.utc)
+
+    assert attrs.recorded_date == expected_recorded
+    assert attrs.doc_date == expected_doc
 
 
-def test_missing_required_id_field_throws_validation_error(raw_charleston_county_json):
+def test_missing_required_id_field_throws_validation_error(raw_parcel_response):
     """Ensures missing mandatory identifiers trigger immediate safe extraction failures."""
     # Delete the vital key from the nested dict structure
-    del raw_charleston_county_json["features"][0]["attributes"][
-        "FEATURES.SDE.P_POLY_PARCEL.OBJECTID"
-    ]
+    del raw_parcel_response["features"][0]["attributes"]["OBJECTID"]
 
     with pytest.raises(ValidationError) as excinfo:
-        ArcGISResponse.model_validate(raw_charleston_county_json)
+        ArcGISResponse.model_validate(raw_parcel_response)
 
-    assert "FEATURES.SDE.P_POLY_PARCEL.OBJECTID" in str(excinfo.value)
+    assert "OBJECTID" in str(excinfo.value)
 
 
 def test_handles_multiple_features_in_payload():
@@ -346,14 +172,14 @@ def test_handles_multiple_features_in_payload():
         "features": [
             {
                 "attributes": {
-                    "FEATURES.SDE.P_POLY_PARCEL.OBJECTID": 1,
-                    "FEATURES.SDE.P_POLY_PARCEL.PID": "001",
+                    "OBJECTID": 1,
+                    "PID": "001",
                 }
             },
             {
                 "attributes": {
-                    "FEATURES.SDE.P_POLY_PARCEL.OBJECTID": 2,
-                    "FEATURES.SDE.P_POLY_PARCEL.PID": "002",
+                    "OBJECTID": 2,
+                    "PID": "002",
                 }
             },
         ]
@@ -364,5 +190,5 @@ def test_handles_multiple_features_in_payload():
 
     # ASSERT
     assert len(response.features) == 2
-    assert response.features[0].attributes.features_sde_p_poly_parcel_objectid == 1
-    assert response.features[1].attributes.features_sde_p_poly_parcel_objectid == 2
+    assert response.features[0].attributes.objectid == 1
+    assert response.features[1].attributes.objectid == 2

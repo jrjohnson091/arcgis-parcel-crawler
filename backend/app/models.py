@@ -36,129 +36,69 @@ class Attributes(Base):
 
     # Explicit column types combined with PEP-584 type hint mappings
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    features_sde_p_poly_parcel_objectid: Mapped[int] = mapped_column(
-        Integer, index=True, unique=True
-    )
-    features_sde_p_poly_parcel_pid: Mapped[Optional[str]] = mapped_column(
-        String(15), nullable=True
-    )
-    features_sde_p_poly_parcel_gpin: Mapped[Optional[str]] = mapped_column(
-        String(16), nullable=True
-    )
-    features_sde_p_poly_parcel_acres_cal: Mapped[Optional[float]] = mapped_column(
-        Float, nullable=True
-    )
-    features_sde_cama_owner1: Mapped[Optional[str]] = mapped_column(
-        String(255), nullable=True
-    )
-    features_sde_cama_owner2: Mapped[Optional[str]] = mapped_column(
-        String(255), nullable=True
-    )
-    features_sde_cama_tax_district: Mapped[Optional[str]] = mapped_column(
-        String(255), nullable=True
-    )
-    features_sde_cama_class_code: Mapped[Optional[str]] = mapped_column(
-        String(255), nullable=True
-    )
-    features_sde_cama_mail_st_no: Mapped[Optional[str]] = mapped_column(
-        String(255), nullable=True
-    )
-    features_sde_cama_mail_st_name: Mapped[Optional[str]] = mapped_column(
-        String(255), nullable=True
-    )
-    features_sde_cama_mail_st_type: Mapped[Optional[str]] = mapped_column(
-        String(255), nullable=True
-    )
-    features_sde_cama_mail_2nd_addr: Mapped[Optional[str]] = mapped_column(
-        String(255), nullable=True
-    )
-    features_sde_cama_mail_2nd_addt: Mapped[Optional[str]] = mapped_column(
-        String(255), nullable=True
-    )
-    features_sde_cama_mail_city: Mapped[Optional[str]] = mapped_column(
-        String(255), nullable=True
-    )
-    features_sde_cama_mail_state: Mapped[Optional[str]] = mapped_column(
-        String(255), nullable=True
-    )
-    features_sde_cama_mail_zip: Mapped[Optional[str]] = mapped_column(
-        String(255), nullable=True
-    )
-    features_sde_cama_mail_country: Mapped[Optional[str]] = mapped_column(
-        String(255), nullable=True
-    )
-    features_sde_cama_legal_descr: Mapped[Optional[str]] = mapped_column(
-        String(255), nullable=True
-    )
-    features_sde_cama_subdivision: Mapped[Optional[str]] = mapped_column(
-        String(255), nullable=True
-    )
-    features_sde_cama_acreage: Mapped[Optional[float]] = mapped_column(
-        Float, nullable=True
-    )
-    features_sde_cama_legal_residence: Mapped[Optional[str]] = mapped_column(
-        String(255), nullable=True
-    )
-    features_sde_cama_other: Mapped[Optional[str]] = mapped_column(
-        String(255), nullable=True
-    )
-    features_sde_cama_agr: Mapped[Optional[str]] = mapped_column(
-        String(255), nullable=True
-    )
-    features_sde_cama_deed_book_page: Mapped[Optional[str]] = mapped_column(
-        String(255), nullable=True
-    )
-    features_sde_cama_plat_book_page: Mapped[Optional[str]] = mapped_column(
-        String(255), nullable=True
-    )
-    features_sde_cama_sale_price: Mapped[Optional[float]] = mapped_column(
-        Float, nullable=True
-    )
+    objectid: Mapped[int] = mapped_column(Integer, index=True, unique=True)
+    pid: Mapped[Optional[str]] = mapped_column(String(15), nullable=True)
+    owner1: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    owner2: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    tax_district: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    class_code: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    mail_st_no: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    mail_st_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    mail_st_type: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    mail_2nd_addr: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    mail_2nd_addt: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    mail_city: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    mail_state: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    mail_zip: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    mail_country: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    legal_descr: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    subdivision: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    acreage: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    legal_residence: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    other: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    agr: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    deed_book_page: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    plat_book_page: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    sale_price: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
 
     # Pristine native timezone-naive destinations for Postgres TIMESTAMP WITHOUT TIME ZONE
-    features_sde_cama_recorded_date: Mapped[Optional[datetime]] = mapped_column(
-        DateTime, nullable=True
-    )
-    features_sde_cama_doc_date: Mapped[Optional[datetime]] = mapped_column(
-        DateTime, nullable=True
-    )
+    recorded_date: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    doc_date: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
 
 class InboundAttributesSchema(BaseModel):
     """Its only job is to consume, clean, and validate raw API JSON."""
 
     # Map the nasty uppercase API dot-notation keys directly to clean snake_case properties
-    features_sde_p_poly_parcel_objectid: int = Field(alias="FEATURES.SDE.P_POLY_PARCEL.OBJECTID")
-    features_sde_p_poly_parcel_pid: Optional[str] = Field(default=None, alias="FEATURES.SDE.P_POLY_PARCEL.PID")
-    features_sde_p_poly_parcel_gpin: Optional[str] = Field(default=None, alias="FEATURES.SDE.P_POLY_PARCEL.GPIN")
-    features_sde_p_poly_parcel_acres_cal: Optional[float] = Field(default=None, alias="FEATURES.SDE.P_POLY_PARCEL.ACRES_CAL")
-    features_sde_cama_owner1: Optional[str] = Field(default=None, alias="FEATURES.SDE.CAMA.OWNER1")
-    features_sde_cama_owner2: Optional[str] = Field(default=None, alias="FEATURES.SDE.CAMA.OWNER2")
-    features_sde_cama_tax_district: Optional[str] = Field(default=None, alias="FEATURES.SDE.CAMA.TAX_DISTRICT")
-    features_sde_cama_class_code: Optional[str] = Field(default=None, alias="FEATURES.SDE.CAMA.CLASS_CODE")
-    features_sde_cama_mail_st_no: Optional[str] = Field(default=None, alias="FEATURES.SDE.CAMA.MAIL_ST_NO")
-    features_sde_cama_mail_st_name: Optional[str] = Field(default=None, alias="FEATURES.SDE.CAMA.MAIL_ST_NAME")
-    features_sde_cama_mail_st_type: Optional[str] = Field(default=None, alias="FEATURES.SDE.CAMA.MAIL_ST_TYPE")
-    features_sde_cama_mail_2nd_addr: Optional[str] = Field(default=None, alias="FEATURES.SDE.CAMA.MAIL_2ND_ADDR")
-    features_sde_cama_mail_2nd_addt: Optional[str] = Field(default=None, alias="FEATURES.SDE.CAMA.MAIL_2ND_ADDT")
-    features_sde_cama_mail_city: Optional[str] = Field(default=None, alias="FEATURES.SDE.CAMA.MAIL_CITY")
-    features_sde_cama_mail_state: Optional[str] = Field(default=None, alias="FEATURES.SDE.CAMA.MAIL_STATE")
-    features_sde_cama_mail_zip: Optional[str] = Field(default=None, alias="FEATURES.SDE.CAMA.MAIL_ZIP")
-    features_sde_cama_mail_country: Optional[str] = Field(default=None, alias="FEATURES.SDE.CAMA.MAIL_COUNTRY")
-    features_sde_cama_legal_descr: Optional[str] = Field(default=None, alias="FEATURES.SDE.CAMA.LEGAL_DESCR")
-    features_sde_cama_subdivision: Optional[str] = Field(default=None, alias="FEATURES.SDE.CAMA.SUBDIVISION")
-    features_sde_cama_acreage: Optional[float] = Field(default=None, alias="FEATURES.SDE.CAMA.ACREAGE")
-    features_sde_cama_legal_residence: Optional[str] = Field(default=None, alias="FEATURES.SDE.CAMA.LEGAL_RESIDENCE")
-    features_sde_cama_other: Optional[str] = Field(default=None, alias="FEATURES.SDE.CAMA.OTHER")
-    features_sde_cama_agr: Optional[str] = Field(default=None, alias="FEATURES.SDE.CAMA.AGR")
-    features_sde_cama_deed_book_page: Optional[str] = Field(default=None, alias="FEATURES.SDE.CAMA.DEED_BOOK_PAGE")
-    features_sde_cama_plat_book_page: Optional[str] = Field(default=None, alias="FEATURES.SDE.CAMA.PLAT_BOOK_PAGE")
-    features_sde_cama_sale_price: Optional[float] = Field(default=None, alias="FEATURES.SDE.CAMA.SALE_PRICE")
-    features_sde_cama_recorded_date: Optional[datetime] = Field(default=None, alias="FEATURES.SDE.CAMA.RECORDED_DATE")
-    features_sde_cama_doc_date: Optional[datetime] = Field(default=None, alias="FEATURES.SDE.CAMA.DOC_DATE")
+    objectid: int = Field(alias="OBJECTID")
+    pid: Optional[str] = Field(default=None, alias="PID")
+    owner1: Optional[str] = Field(default=None, alias="OWNER1")
+    owner2: Optional[str] = Field(default=None, alias="OWNER2")
+    tax_district: Optional[str] = Field(default=None, alias="TAX_DISTRICT")
+    class_code: Optional[str] = Field(default=None, alias="CLASS_CODE")
+    mail_st_no: Optional[str] = Field(default=None, alias="MAIL_ST_NO")
+    mail_st_name: Optional[str] = Field(default=None, alias="MAIL_ST_NAME")
+    mail_st_type: Optional[str] = Field(default=None, alias="MAIL_ST_TYPE")
+    mail_2nd_addr: Optional[str] = Field(default=None, alias="MAIL_2ND_ADDR")
+    mail_2nd_addt: Optional[str] = Field(default=None, alias="MAIL_2ND_ADDT")
+    mail_city: Optional[str] = Field(default=None, alias="MAIL_CITY")
+    mail_state: Optional[str] = Field(default=None, alias="MAIL_STATE")
+    mail_zip: Optional[str] = Field(default=None, alias="MAIL_ZIP")
+    mail_country: Optional[str] = Field(default=None, alias="MAIL_COUNTRY")
+    legal_descr: Optional[str] = Field(default=None, alias="LEGAL_DESCR")
+    subdivision: Optional[str] = Field(default=None, alias="SUBDIVISION")
+    acreage: Optional[float] = Field(default=None, alias="ACREAGE")
+    legal_residence: Optional[str] = Field(default=None, alias="LEGAL_RESIDENCE")
+    other: Optional[str] = Field(default=None, alias="OTHER")
+    agr: Optional[str] = Field(default=None, alias="AGR")
+    deed_book_page: Optional[str] = Field(default=None, alias="DEED_BOOK_PAGE")
+    plat_book_page: Optional[str] = Field(default=None, alias="PLAT_BOOK_PAGE")
+    sale_price: Optional[float] = Field(default=None, alias="SALE_PRICE")
+    recorded_date: Optional[datetime] = Field(default=None, alias="RECORDED_DATE")
+    doc_date: Optional[datetime] = Field(default=None, alias="DOC_DATE")
 
     # Hook 1: Automatically transform millisecond bigints to UTC Datetime objects
-    @field_validator("features_sde_cama_recorded_date", "features_sde_cama_doc_date", mode="before")
+    @field_validator("recorded_date", "doc_date", mode="before")
     @classmethod
     def transform_ms_to_datetime(cls, value: Any) -> Any:
         if isinstance(value, (int, float)) and value > 1e11:
