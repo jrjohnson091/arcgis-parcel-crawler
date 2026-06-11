@@ -44,5 +44,35 @@ services:
       - .env
     command: sleep infinity
 
+  notebook:
+    image: ${DOCKER_IMAGE?Variable not set}:${TAG-latest}
+    build:
+      context: ./backend
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+        # restart: true
+      prestart:
+        condition: service_completed_successfully
+    command:
+      - sh
+      - -c
+      - >
+        uv sync --group notebook &&
+        uv run --group notebook jupyter lab
+        --ip=0.0.0.0
+        --port=8888
+        --no-browser
+        --allow-root
+        --notebook-dir=/notebooks
+    ports:
+      - 8888:8888
+    volumes:
+      - ./backend:/app
+      - /app/.venv
+      - ./notebooks:/notebooks
+
 volumes:
   app-db-data:

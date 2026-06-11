@@ -11,14 +11,45 @@ MAX_VALID_ARCGIS_DATE = datetime.now(timezone.utc).replace(
 )
 
 
-class Params(BaseModel):
+class BaseParams(BaseModel):
     where: str = "1=1"
+    f: str = "json"
+
+
+class ParcelParams(BaseParams):
     outFields: str = "*"
     returnGeometry: bool = False
     resultOffset: int = 0
     resultRecordCount: int = 1000
     returnCountOnly: bool = True
-    f: str = "json"
+
+
+class NearbyParcelParams(BaseParams):
+    geometryType: str = "esriGeometryPoint"
+    inSR: int = 4326
+    spatialRel: str = "esriSpatialRelIntersects"
+    units: str = "esriSRUnit_StatuteMile"
+
+    lon: float
+    lat: float
+    distance: float
+
+    @property
+    def geometry(self) -> str:
+        return f"{self.lon},{self.lat}"
+
+    def to_query_params(self) -> dict[str, Any]:
+        data = self.model_dump(exclude={"lon", "lat"})
+        data["geometry"] = self.geometry
+        return data
+
+
+class NearbyParcelCountParams(NearbyParcelParams):
+    returnCountOnly: bool = True
+
+
+class NearbyParcelIdsParams(NearbyParcelParams):
+    returnIdsOnly: bool = True
 
 
 class RecordsOnlyResponse(BaseModel):
@@ -111,12 +142,10 @@ class InboundAttributesSchema(BaseModel):
         if isinstance(value, (int, float)) and abs(value) > 1e11:
             parsed_date = datetime.fromtimestamp(value / 1000, tz=timezone.utc)
 
-            min_valid_date = datetime(1800, 1, 1, tzinfo=timezone.utc)
-            max_valid_date = datetime.now(timezone.utc).replace(
-                year=datetime.now(timezone.utc).year + 1
-            )
-
-            if parsed_date < min_valid_date or parsed_date > max_valid_date:
+            if (
+                parsed_date < MIN_VALID_ARCGIS_DATE
+                or parsed_date > MAX_VALID_ARCGIS_DATE
+            ):
                 return None
 
             return parsed_date
@@ -157,3 +186,7 @@ class ArcGIS_API_Error(BaseModel):
 
 class ArcGIS_Error_Response(BaseModel):
     error: ArcGIS_API_Error
+
+class ObjectIdsOnlyResponse(BaseModel):
+    objectIdFieldName: str
+    objectIds: list[int]

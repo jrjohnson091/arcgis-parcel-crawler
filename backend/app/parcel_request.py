@@ -2,7 +2,7 @@ import time
 
 import requests
 from sqlalchemy.dialects.postgresql import insert
-from sqlmodel import Session
+from sqlalchemy.orm import Session
 
 from .config import settings
 from .db import get_session
@@ -10,7 +10,7 @@ from .models import (
     ArcGIS_Error_Response,
     ArcGISResponse,
     Attributes,
-    Params,
+    ParcelParams,
     RecordsOnlyResponse,
 )
 
@@ -20,7 +20,9 @@ headers = {
 }
 
 
-def fetch_page(params_model: Params) -> ArcGISResponse | RecordsOnlyResponse | None:
+def fetch_page(
+    params_model: ParcelParams,
+) -> ArcGISResponse | RecordsOnlyResponse | None:
     query_params = params_model.model_dump()
 
     try:
@@ -112,7 +114,7 @@ def insert_features(
 
 
 def validate_parcel_service() -> bool:
-    params_model = Params(
+    params_model = ParcelParams(
         resultRecordCount=1,
         returnCountOnly=False,
     )
@@ -155,7 +157,7 @@ def crawl_all_parcels(page_size: int = 2000, delay_seconds: float = 0.5) -> None
 
     try:
         while True:
-            params_model = Params(
+            params_model = ParcelParams(
                 resultOffset=offset, resultRecordCount=page_size, returnCountOnly=False
             )
 
