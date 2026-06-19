@@ -2,6 +2,15 @@ FROM python:3.13
 
 ENV PYTHONUNBUFFERED=1
 
+RUN apt-get update && \
+    apt-get install -y \
+        jq \
+        curl \
+        less \
+        vim \
+        procps && \
+    rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app/
 
 # Install uv

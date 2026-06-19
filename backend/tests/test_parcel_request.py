@@ -1,6 +1,6 @@
 import requests
 
-from app.models import Params
+from app.models import ParcelParams
 from app.parcel_request import fetch_page
 
 
@@ -37,7 +37,7 @@ class MockResponse:
 
         monkeypatch.setattr("app.parcel_request.requests.get", mock_get)
 
-        result = fetch_page(Params(returnCountOnly=False))
+        result = fetch_page(ParcelParams(returnCountOnly=False))
 
         captured = capsys.readouterr()
 
@@ -62,7 +62,7 @@ def test_fetch_page_handles_non_json_html_response(monkeypatch, capsys):
 
     monkeypatch.setattr("app.parcel_request.requests.get", mock_get)
 
-    result = fetch_page(Params(returnCountOnly=False))
+    result = fetch_page(ParcelParams(returnCountOnly=False))
 
     captured = capsys.readouterr()
 
@@ -82,7 +82,7 @@ def test_fetch_page_handles_json_decode_error(monkeypatch, capsys):
 
     monkeypatch.setattr("app.parcel_request.requests.get", mock_get)
 
-    result = fetch_page(Params(returnCountOnly=False))
+    result = fetch_page(ParcelParams(returnCountOnly=False))
 
     captured = capsys.readouterr()
 
@@ -106,7 +106,7 @@ def test_fetch_page_handles_arcgis_json_error(monkeypatch, capsys):
 
     monkeypatch.setattr("app.parcel_request.requests.get", mock_get)
 
-    result = fetch_page(Params(returnCountOnly=False))
+    result = fetch_page(ParcelParams(returnCountOnly=False))
 
     captured = capsys.readouterr()
 
@@ -121,6 +121,6 @@ def test_fetch_page_returns_records_only_response(monkeypatch):
 
     monkeypatch.setattr("app.parcel_request.requests.get", mock_get)
 
-    result = fetch_page(Params(returnCountOnly=True))
+    result = fetch_page(ParcelParams(returnCountOnly=True))
 
     assert result.count == 123

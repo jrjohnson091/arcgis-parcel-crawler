@@ -62,34 +62,41 @@ class Base(DeclarativeBase):
     pass
 
 
-class Attributes(Base):
+class Parcel(Base):
     """Your actual PostgreSQL table structure.
 
     Expects clean, native Python types.
     """
 
-    __tablename__ = "parcel_records"
+    __tablename__ = "parcels"
+
+    pid: Mapped[Optional[str]] = mapped_column(String(15), primary_key=True)
 
     # Explicit column types combined with PEP-584 type hint mappings
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    objectid: Mapped[int] = mapped_column(Integer, index=True, unique=True)
-    pid: Mapped[Optional[str]] = mapped_column(String(15), nullable=True)
+    objectid: Mapped[int] = mapped_column(Integer, index=True, nullable=False)
+    snapshot_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     owner1: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     owner2: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     tax_district: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    class_code: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    class_code: Mapped[Optional[str]] = mapped_column(
+        String(255), index=True, nullable=True
+    )
     mail_st_no: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     mail_st_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     mail_st_type: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     mail_2nd_addr: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     mail_2nd_addt: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     mail_city: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    mail_state: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    mail_zip: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    mail_state: Mapped[Optional[str]] = mapped_column(
+        String(255), index=True, nullable=True
+    )
+    mail_zip: Mapped[Optional[str]] = mapped_column(
+        String(255), index=True, nullable=True
+    )
     mail_country: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     legal_descr: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     subdivision: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    acreage: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    acreage: Mapped[Optional[float]] = mapped_column(Float, index=True, nullable=True)
     legal_residence: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     other: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     agr: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
@@ -102,7 +109,7 @@ class Attributes(Base):
     doc_date: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
 
-class InboundAttributesSchema(BaseModel):
+class ArcGISParcelSchema(BaseModel):
     """Its only job is to consume, clean, and validate raw API JSON."""
 
     # Map the nasty uppercase API dot-notation keys directly to clean snake_case properties
@@ -168,13 +175,13 @@ class InboundAttributesSchema(BaseModel):
         return data
 
 
-class Feature(BaseModel):
-    attributes: InboundAttributesSchema
+class ArcGISFeature(BaseModel):
+    attributes: ArcGISParcelSchema
     geometry: Optional[dict[str, Any]] = None
 
 
 class ArcGISResponse(BaseModel):
-    features: list[Feature]
+    features: list[ArcGISFeature]
     exceededTransferLimit: Optional[bool] = False
 
 
@@ -186,6 +193,7 @@ class ArcGIS_API_Error(BaseModel):
 
 class ArcGIS_Error_Response(BaseModel):
     error: ArcGIS_API_Error
+
 
 class ObjectIdsOnlyResponse(BaseModel):
     objectIdFieldName: str

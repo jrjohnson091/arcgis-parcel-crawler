@@ -1,4 +1,5 @@
 import time
+from datetime import datetime, timezone
 
 import requests
 from sqlalchemy.dialects.postgresql import insert
@@ -9,7 +10,7 @@ from .db import get_session
 from .models import (
     ArcGIS_Error_Response,
     ArcGISResponse,
-    Attributes,
+    Parcel,
     ParcelParams,
     RecordsOnlyResponse,
 )
@@ -77,7 +78,7 @@ def fetch_page(
 
 
 def insert_features(
-    session: Session, validated_data: ArcGISResponse
+    session: Session, validated_data: ArcGISResponse, snapshot_at: datetime
 ) -> tuple[int, int]:
     inserted_count = 0
     skipped_count = 0
@@ -87,26 +88,30 @@ def insert_features(
 
         validated_fields = incoming_record.model_dump(
             by_alias=False,
-            mode="json",
+            mode="python",
         )
 
-        if "id" in validated_fields:
-            del validated_fields["id"]
+        validated_fields["snapshot_at"] = snapshot_at
 
-        stmt = insert(Attributes).values(**validated_fields)
-
-        skip_stmt = stmt.on_conflict_do_nothing(
-            index_elements=[
-                Attributes.objectid,
-            ]
-        )
-
-        result = session.exec(skip_stmt)
-
-        if result.rowcount and result.rowcount > 0:
-            inserted_count += 1
-        else:
+        if not validated_fields.get("pid"):
             skipped_count += 1
+            continue
+
+        stmt = (
+            insert(Parcel)
+            .values(**validated_fields)
+            .on_conflict_do_nothing(
+                index_elements=[Parcel.pid]
+            )
+            .returning(Parcel.pid)
+        )
+
+        inserted_pid = session.execute(stmt).scalar_one_or_none()
+
+        if inserted_pid is None:
+            skipped_count += 1
+        else:
+            inserted_count += 1
 
     session.commit()
 
@@ -135,8 +140,8 @@ def validate_parcel_service() -> bool:
 
     first_feature = page_data.features[0]
 
-    if first_feature.attributes.objectid is None:
-        print("❌ Parcel service response is missing OBJECTID.")
+    if first_feature.attributes.pid is None:
+        print("❌ Parcel service response is missing PID.")
         return False
 
     print("✅ Parcel service validation passed.")
@@ -146,6 +151,8 @@ def validate_parcel_service() -> bool:
 def crawl_all_parcels(page_size: int = 2000, delay_seconds: float = 0.5) -> None:
     if not validate_parcel_service():
         return
+
+    snapshot_at = datetime.now(timezone.utc).replace(tzinfo=None)
 
     offset = 0
 
@@ -181,8 +188,7 @@ def crawl_all_parcels(page_size: int = 2000, delay_seconds: float = 0.5) -> None
 
             try:
                 inserted_count, skipped_count = insert_features(
-                    session=session,
-                    validated_data=page_data,
+                    session=session, validated_data=page_data, snapshot_at=snapshot_at
                 )
             except Exception as e:
                 session.rollback()

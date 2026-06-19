@@ -9,7 +9,7 @@ services:
       start_period: 30s
       timeout: 10s
     volumes:
-      - app-db-data:/var/lib/postgresql/data/pgdata
+      - app-db-data-reorg:/var/lib/postgresql/data/pgdata
     env_file:
       - .env
     environment:
@@ -75,4 +75,4 @@ services:
       - ./notebooks:/notebooks
 
 volumes:
-  app-db-data:
+  app-db-data-reorg:

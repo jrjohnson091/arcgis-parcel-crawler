@@ -1,9 +1,8 @@
 from datetime import datetime, timezone
-import pytest
-from pydantic import ValidationError
 
-# Make sure this import accurately points to where your pure Pydantic schemas live
+import pytest
 from app.models import ArcGISResponse
+from pydantic import ValidationError
 
 
 @pytest.fixture

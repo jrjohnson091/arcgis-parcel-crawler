@@ -1,30 +1,37 @@
+from datetime import datetime, timezone
+
 import pytest
+from app.models import Parcel
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from app.models import Attributes
+
+SNAPSHOT_TIME = datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def test_attributes_persistence_integrity(db_session):
     """Verify core persistence and unique index constraint."""
     # 1. Insert valid record
-    record = Attributes(objectid=101, owner1="John Doe")
+    record = Parcel(
+        pid="3970500692", objectid=101, owner1="John Doe", snapshot_at=SNAPSHOT_TIME
+    )
     db_session.add(record)
     db_session.commit()
 
     # 2. Verify retrieval
-    stmt = select(Attributes).where(Attributes.objectid == 101)
+    stmt = select(Parcel).where(Parcel.pid == "3970500692")
     retrieved = db_session.scalar(stmt)
     assert retrieved.owner1 == "John Doe"
+    assert retrieved.snapshot_at == SNAPSHOT_TIME
 
 
 def test_unique_constraint_enforcement(db_session):
-    """Verify that the database rejects duplicate ObjectIDs."""
+    """Verify that the database rejects duplicate PIDs."""
     # Insert first
-    db_session.add(Attributes(objectid=202))
+    db_session.add(Parcel(pid=202, objectid=101, snapshot_at=SNAPSHOT_TIME))
     db_session.commit()
 
     # Insert duplicate
-    db_session.add(Attributes(objectid=202))
+    db_session.add(Parcel(pid=202, objectid=101, snapshot_at=SNAPSHOT_TIME))
 
     # Assert DB raises integrity error
     with pytest.raises(IntegrityError):
@@ -33,7 +40,7 @@ def test_unique_constraint_enforcement(db_session):
 
 def test_nullable_fields_persistence(db_session):
     """Verify that optional fields are stored as NULL when not provided."""
-    record = Attributes(objectid=303)
+    record = Parcel(pid="3970500692", objectid=101, snapshot_at=SNAPSHOT_TIME)
     db_session.add(record)
     db_session.commit()
 
