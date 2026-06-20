@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 import pytest
-from app.models import ArcGISResponse
+from app.models import ArcGISResponse, PidOnlyResponse
 from pydantic import ValidationError
 
 
@@ -237,3 +237,67 @@ def test_valid_epoch_milliseconds_still_convert_to_datetime():
         1628640000000 / 1000,
         tz=timezone.utc,
     )
+
+def test_pid_only_response_parses_single_pid():
+    raw_response = {
+        "displayFieldName": "PROP_ST_NAME",
+        "fieldAliases": {
+            "PID": "PID",
+        },
+        "fields": [
+            {
+                "name": "PID",
+                "type": "esriFieldTypeString",
+                "alias": "PID",
+                "length": 15,
+            }
+        ],
+        "features": [
+            {
+                "attributes": {
+                    "PID": "3301000048",
+                }
+            }
+        ],
+    }
+
+    parsed = PidOnlyResponse.model_validate(raw_response)
+
+    assert len(parsed.features) == 1
+    assert parsed.features[0].attributes.pid == "3301000048"
+
+
+def test_pid_only_response_preserves_leading_zeroes():
+    raw_response = {
+        "features": [
+            {
+                "attributes": {
+                    "PID": "0860000029",
+                }
+            }
+        ],
+    }
+
+    parsed = PidOnlyResponse.model_validate(raw_response)
+
+    assert parsed.features[0].attributes.pid == "0860000029"
+
+
+def test_pid_only_response_parses_multiple_pids():
+    raw_response = {
+        "features": [
+            {"attributes": {"PID": "3301000048"}},
+            {"attributes": {"PID": "0860000029"}},
+            {"attributes": {"PID": "5370800072"}},
+        ],
+    }
+
+    parsed = PidOnlyResponse.model_validate(raw_response)
+
+    pids = [feature.attributes.pid for feature in parsed.features]
+
+    assert pids == [
+        "3301000048",
+        "0860000029",
+        "5370800072",
+    ]

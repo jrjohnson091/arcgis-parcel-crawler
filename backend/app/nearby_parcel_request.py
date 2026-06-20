@@ -5,6 +5,8 @@ from .models import (
     NearbyParcelCountParams,
     NearbyParcelIdsParams,
     ObjectIdsOnlyResponse,
+    PidLookupParams,
+    PidOnlyResponse,
     RecordsOnlyResponse,
 )
 
@@ -20,7 +22,7 @@ def fetch_nearby_count(
 
     try:
         response = requests.get(
-            settings.URL,
+            str(settings.URL),
             params=params_model.to_query_params(),
             headers=headers,
             timeout=30,
@@ -46,7 +48,7 @@ def fetch_nearby_ids(
 
     try:
         response = requests.get(
-            settings.URL,
+            str(settings.URL),
             params=params_model.to_query_params(),
             headers=headers,
             timeout=30,
@@ -64,3 +66,35 @@ def fetch_nearby_ids(
     except Exception as e:
         print(f"❌ Validation Error: {e}")
         return None
+
+
+def fetch_pids(object_ids: list[int]) -> list[str]:
+    if not object_ids:
+        return []
+
+    params_model = PidLookupParams(
+        object_ids=object_ids
+    )
+
+    try:
+        response = requests.get(
+            str(settings.URL),
+            params=params_model.to_query_params(),
+            headers=headers,
+            timeout=30,
+        )
+        response.raise_for_status()
+        response_json = response.json()
+    except Exception as e:
+        print(f"❌ Request Error: {e}")
+        return []
+
+    try:
+        parsed = PidOnlyResponse.model_validate(response_json)
+    except Exception as e:
+        print(f"❌ Validation Error: {e}")
+        return []
+
+    return [
+        feature.attributes.pid for feature in parsed.features if feature.attributes.pid
+    ]

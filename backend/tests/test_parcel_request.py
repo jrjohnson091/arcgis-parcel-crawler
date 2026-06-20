@@ -1,6 +1,6 @@
 import requests
 
-from app.models import ParcelParams
+from app.models import ParcelParams, RecordsOnlyResponse
 from app.parcel_request import fetch_page
 
 
@@ -31,7 +31,7 @@ class MockResponse:
             raise self._json_error
         return self._json_data
 
-    def test_fetch_page_handles_request_exception(monkeypatch, capsys):
+    def test_fetch_page_handles_request_exception(self, monkeypatch, capsys):
         def mock_get(*args, **kwargs):
             raise requests.exceptions.Timeout("request timed out")
 
@@ -123,4 +123,5 @@ def test_fetch_page_returns_records_only_response(monkeypatch):
 
     result = fetch_page(ParcelParams(returnCountOnly=True))
 
+    assert isinstance(result, RecordsOnlyResponse)
     assert result.count == 123

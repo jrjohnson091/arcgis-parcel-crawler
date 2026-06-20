@@ -52,6 +52,19 @@ class NearbyParcelIdsParams(NearbyParcelParams):
     returnIdsOnly: bool = True
 
 
+class PidLookupParams(BaseParams):
+    object_ids: list[int]
+    outFields: str = "PID"
+    returnGeometry: bool = False
+
+    def to_query_params(self) -> dict[str, Any]:
+        data = self.model_dump(exclude={"object_ids"})
+
+        data["objectIds"] = ",".join(str(object_id) for object_id in self.object_ids)
+
+        return data
+
+
 class RecordsOnlyResponse(BaseModel):
     count: int
 
@@ -70,7 +83,7 @@ class Parcel(Base):
 
     __tablename__ = "parcels"
 
-    pid: Mapped[Optional[str]] = mapped_column(String(15), primary_key=True)
+    pid: Mapped[str] = mapped_column(String(15), primary_key=True)
 
     # Explicit column types combined with PEP-584 type hint mappings
     objectid: Mapped[int] = mapped_column(Integer, index=True, nullable=False)
@@ -175,26 +188,39 @@ class ArcGISParcelSchema(BaseModel):
         return data
 
 
-class ArcGISFeature(BaseModel):
+class ArcGISParcelFeature(BaseModel):
     attributes: ArcGISParcelSchema
     geometry: Optional[dict[str, Any]] = None
 
 
 class ArcGISResponse(BaseModel):
-    features: list[ArcGISFeature]
+    features: list[ArcGISParcelFeature]
     exceededTransferLimit: Optional[bool] = False
 
 
-class ArcGIS_API_Error(BaseModel):
+class ArcGISApiError(BaseModel):
     code: int
     message: str
     details: list[Any] = []
 
 
-class ArcGIS_Error_Response(BaseModel):
-    error: ArcGIS_API_Error
+class ArcGISErrorResponse(BaseModel):
+    error: ArcGISApiError
 
 
 class ObjectIdsOnlyResponse(BaseModel):
     objectIdFieldName: str
     objectIds: list[int]
+
+
+class PidOnlySchema(BaseModel):
+    pid: str = Field(alias="PID")
+
+
+class PidOnlyFeature(BaseModel):
+    attributes: PidOnlySchema
+    geometry: Optional[dict[str, Any]] = None
+
+
+class PidOnlyResponse(BaseModel):
+    features: list[PidOnlyFeature]

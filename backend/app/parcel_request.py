@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from .config import settings
 from .db import get_session
 from .models import (
-    ArcGIS_Error_Response,
+    ArcGISErrorResponse,
     ArcGISResponse,
     Parcel,
     ParcelParams,
@@ -28,7 +28,7 @@ def fetch_page(
 
     try:
         response = requests.get(
-            settings.URL, params=query_params, headers=headers, timeout=30
+            str(settings.URL), params=query_params, headers=headers, timeout=30
         )
         response.raise_for_status()
     except requests.exceptions.RequestException as e:
@@ -54,7 +54,7 @@ def fetch_page(
 
     if "error" in response_json:
         try:
-            error_data = ArcGIS_Error_Response.model_validate(response_json)
+            error_data = ArcGISErrorResponse.model_validate(response_json)
             print(f"❌ ArcGIS Server Error (Code {error_data.error.code}):")
             print(f"   Message: {error_data.error.message}")
         except Exception:

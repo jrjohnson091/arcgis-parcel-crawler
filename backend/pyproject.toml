@@ -17,6 +17,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "coverage>=7.14.1",
+    "pyright>=1.1.410",
     "pytest>=9.0.3",
 ]
 notebook = [
