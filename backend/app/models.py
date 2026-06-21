@@ -3,12 +3,12 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlalchemy import DateTime, Float, Integer, String
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 MIN_VALID_ARCGIS_DATE = datetime(1800, 1, 1, tzinfo=timezone.utc)
-MAX_VALID_ARCGIS_DATE = datetime.now(timezone.utc).replace(
-    year=datetime.now(timezone.utc).year + 1
-)
+now = datetime.now(timezone.utc)
+MAX_VALID_ARCGIS_DATE = now.replace(year=now.year + 1)
 
 
 class BaseParams(BaseModel):
@@ -16,11 +16,16 @@ class BaseParams(BaseModel):
     f: str = "json"
 
 
-class ParcelParams(BaseParams):
+class ParcelFetchParams(BaseParams):
     outFields: str = "*"
-    returnGeometry: bool = False
+    returnGeometry: bool = True
     resultOffset: int = 0
     resultRecordCount: int = 1000
+    returnCountOnly: bool = False
+    outSR: int = 2273
+
+
+class ParcelCountParams(BaseParams):
     returnCountOnly: bool = True
 
 
@@ -87,7 +92,9 @@ class Parcel(Base):
 
     # Explicit column types combined with PEP-584 type hint mappings
     objectid: Mapped[int] = mapped_column(Integer, index=True, nullable=False)
-    snapshot_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    snapshot_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     owner1: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     owner2: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     tax_district: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
@@ -109,7 +116,9 @@ class Parcel(Base):
     mail_country: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     legal_descr: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     subdivision: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    acreage: Mapped[Optional[float]] = mapped_column(Float, index=True, nullable=True)
+    deeded_acreage: Mapped[Optional[float]] = mapped_column(
+        Float, index=True, nullable=True
+    )
     legal_residence: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     other: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     agr: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
@@ -121,8 +130,21 @@ class Parcel(Base):
     recorded_date: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     doc_date: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
+    geometry_esri_json: Mapped[Optional[dict[str, Any]]] = mapped_column(
+        JSONB, nullable=True
+    )
+    geometry_wkid: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
-class ArcGISParcelSchema(BaseModel):
+    computed_area_sqft: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    computed_acreage: Mapped[Optional[float]] = mapped_column(
+        Float, index=True, nullable=True
+    )
+    area_computation_method: Mapped[Optional[str]] = mapped_column(
+        String(100), nullable=True
+    )
+
+
+class ArcGISParcelAttributes(BaseModel):
     """Its only job is to consume, clean, and validate raw API JSON."""
 
     # Map the nasty uppercase API dot-notation keys directly to clean snake_case properties
@@ -143,7 +165,7 @@ class ArcGISParcelSchema(BaseModel):
     mail_country: Optional[str] = Field(default=None, alias="MAIL_COUNTRY")
     legal_descr: Optional[str] = Field(default=None, alias="LEGAL_DESCR")
     subdivision: Optional[str] = Field(default=None, alias="SUBDIVISION")
-    acreage: Optional[float] = Field(default=None, alias="ACREAGE")
+    deeded_acreage: Optional[float] = Field(default=None, alias="ACREAGE")
     legal_residence: Optional[str] = Field(default=None, alias="LEGAL_RESIDENCE")
     other: Optional[str] = Field(default=None, alias="OTHER")
     agr: Optional[str] = Field(default=None, alias="AGR")
@@ -188,20 +210,30 @@ class ArcGISParcelSchema(BaseModel):
         return data
 
 
+class EsriPolygonGeometry(BaseModel):
+    rings: list[list[list[float]]]
+
+
+class ArcGISSpatialReference(BaseModel):
+    wkid: int | None = None
+    latestWkid: int | None = None
+
+
 class ArcGISParcelFeature(BaseModel):
-    attributes: ArcGISParcelSchema
-    geometry: Optional[dict[str, Any]] = None
+    attributes: ArcGISParcelAttributes
+    geometry: EsriPolygonGeometry | None = None
 
 
 class ArcGISResponse(BaseModel):
+    spatialReference: ArcGISSpatialReference | None = None
     features: list[ArcGISParcelFeature]
-    exceededTransferLimit: Optional[bool] = False
+    exceededTransferLimit: bool = False
 
 
 class ArcGISApiError(BaseModel):
     code: int
     message: str
-    details: list[Any] = []
+    details: list[Any] = Field(default_factory=list)
 
 
 class ArcGISErrorResponse(BaseModel):

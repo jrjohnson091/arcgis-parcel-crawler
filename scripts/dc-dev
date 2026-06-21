@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+export COMPOSE_PROJECT_NAME=parcel-dev
+
+docker compose "$@"

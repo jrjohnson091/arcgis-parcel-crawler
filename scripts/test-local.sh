@@ -1,13 +1,17 @@
 #!/usr/bin/env bash
 set -euxo pipefail
 
-docker-compose down -v --remove-orphans # Remove possibly previous broken stacks left hanging after an error
+cleanup() {
+  ./scripts/dc-test down -v --remove-orphans
+}
 
-if [ $(uname -s) = "Linux" ]; then
-    echo "Remove __pycache__ files"
-    sudo find . -type d -name __pycache__ -exec rm -r {} \+
-fi
+trap cleanup EXIT
 
-docker compose build
-docker compose up -d
-docker compose exec -T backend bash scripts/tests-start.sh "$@"
+echo "Removing __pycache__ directories..."
+find . -type d -name __pycache__ -prune -exec rm -rf {} +
+
+./scripts/dc-test down -v --remove-orphans
+./scripts/dc-test build
+./scripts/dc-test up -d db
+./scripts/dc-test run --rm prestart
+./scripts/dc-test run --rm backend bash scripts/tests-start.sh

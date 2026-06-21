@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 set -euxo pipefail
 
-docker-compose down -v --remove-orphans # Remove possibly previous broken stacks left hanging after an error
+PROJECT_NAME="${COMPOSE_PROJECT_NAME:-parcel-dev}"
 
 if [ $(uname -s) = "Linux" ]; then
     echo "Remove __pycache__ files"
     sudo find . -type d -name __pycache__ -exec rm -r {} \+
 fi
 
-docker compose build
-docker compose up -d
-docker compose exec -T backend bash scripts/check.sh
+docker -p "$PROJECT_NAME" compose build
+docker -p "$PROJECT_NAME" compose up -d backend
+docker -p "$PROJECT_NAME" compose exec -T backend bash scripts/check.sh

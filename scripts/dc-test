@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+export COMPOSE_PROJECT_NAME=parcel-test
+export COMPOSE_FILE=compose.yaml:compose.test.yaml
+
+docker compose "$@"

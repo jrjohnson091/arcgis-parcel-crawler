@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 import pytest
-from app.models import ArcGISResponse, PidOnlyResponse
+from app.models import ArcGISResponse, EsriPolygonGeometry, PidOnlyResponse
 from pydantic import ValidationError
 
 
@@ -301,3 +301,107 @@ def test_pid_only_response_parses_multiple_pids():
         "0860000029",
         "5370800072",
     ]
+
+def test_arcgis_response_parses_polygon_geometry():
+    payload = {
+        "spatialReference": {"wkid": 2273, "latestWkid": 2273},
+        "features": [
+            {
+                "attributes": {
+                    "OBJECTID": 45818,
+                    "PID": "3301000048",
+                    "ACREAGE": 0,
+                },
+                "geometry": {
+                    "rings": [
+                        [
+                            [0.0, 0.0],
+                            [100.0, 0.0],
+                            [100.0, 100.0],
+                            [0.0, 100.0],
+                            [0.0, 0.0],
+                        ]
+                    ]
+                },
+            }
+        ],
+    }
+
+    response = ArcGISResponse.model_validate(payload)
+
+    feature = response.features[0]
+
+    assert response.spatialReference is not None
+    assert response.spatialReference.wkid == 2273
+    assert feature.attributes.pid == "3301000048"
+    assert feature.geometry is not None
+    assert feature.geometry.rings[0][0] == [0.0, 0.0]
+
+def test_esri_geometry_can_dump_to_json_dict():
+    geometry = EsriPolygonGeometry.model_validate(
+        {
+            "rings": [
+                [
+                    [0.0, 0.0],
+                    [100.0, 0.0],
+                    [100.0, 100.0],
+                    [0.0, 100.0],
+                    [0.0, 0.0],
+                ]
+            ]
+        }
+    )
+
+    assert geometry.model_dump() == {
+        "rings": [
+            [
+                [0.0, 0.0],
+                [100.0, 0.0],
+                [100.0, 100.0],
+                [0.0, 100.0],
+                [0.0, 0.0],
+            ]
+        ]
+    }
+
+def test_feature_geometry_maps_to_parcel_geometry_fields():
+    payload = {
+        "spatialReference": {"wkid": 2273, "latestWkid": 2273},
+        "features": [
+            {
+                "attributes": {
+                    "OBJECTID": 45818,
+                    "PID": "3301000048",
+                },
+                "geometry": {
+                    "rings": [
+                        [
+                            [0.0, 0.0],
+                            [100.0, 0.0],
+                            [100.0, 100.0],
+                            [0.0, 100.0],
+                            [0.0, 0.0],
+                        ]
+                    ]
+                },
+            }
+        ],
+    }
+
+    response = ArcGISResponse.model_validate(payload)
+    feature = response.features[0]
+
+    geometry_esri_json = (
+        feature.geometry.model_dump()
+        if feature.geometry is not None
+        else None
+    )
+
+    geometry_wkid = (
+        response.spatialReference.wkid
+        if response.spatialReference is not None
+        else None
+    )
+
+    assert geometry_esri_json == payload["features"][0]["geometry"]
+    assert geometry_wkid == 2273
