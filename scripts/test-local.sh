@@ -2,7 +2,8 @@
 set -euxo pipefail
 
 cleanup() {
-  ./scripts/dc-test down -v --remove-orphans
+    echo "Cleaning up test environment..."
+    ./scripts/dc-test down -v --remove-orphans
 }
 
 trap cleanup EXIT

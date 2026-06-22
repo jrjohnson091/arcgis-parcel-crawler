@@ -97,7 +97,7 @@ def test_full_pipeline_deserialization(raw_parcel_response):
     assert attrs.objectid == 1
     assert attrs.pid == "3970500692"
     assert attrs.owner1 == "GLAVIS DANI LEIGH"
-    assert attrs.acreage == 0.16
+    assert attrs.deeded_acreage == 0.16
     assert attrs.sale_price == 270000.0
 
 

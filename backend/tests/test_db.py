@@ -5,7 +5,7 @@ from app.models import Parcel
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
-SNAPSHOT_TIME = datetime.now(timezone.utc).replace(tzinfo=None)
+SNAPSHOT_TIME = datetime.now(timezone.utc)
 
 
 def test_attributes_persistence_integrity(db_session):
@@ -27,11 +27,11 @@ def test_attributes_persistence_integrity(db_session):
 def test_unique_constraint_enforcement(db_session):
     """Verify that the database rejects duplicate PIDs."""
     # Insert first
-    db_session.add(Parcel(pid=202, objectid=101, snapshot_at=SNAPSHOT_TIME))
+    db_session.add(Parcel(pid="202", objectid=101, snapshot_at=SNAPSHOT_TIME))
     db_session.commit()
 
     # Insert duplicate
-    db_session.add(Parcel(pid=202, objectid=101, snapshot_at=SNAPSHOT_TIME))
+    db_session.add(Parcel(pid="202", objectid=101, snapshot_at=SNAPSHOT_TIME))
 
     # Assert DB raises integrity error
     with pytest.raises(IntegrityError):
@@ -47,3 +47,41 @@ def test_nullable_fields_persistence(db_session):
     db_session.refresh(record)
     assert record.owner1 is None
     assert record.sale_price is None
+
+def test_geometry_fields_persistence(db_session):
+    geometry = {
+        "rings": [
+            [
+                [0.0, 0.0],
+                [100.0, 0.0],
+                [100.0, 100.0],
+                [0.0, 100.0],
+                [0.0, 0.0],
+            ]
+        ]
+    }
+
+    record = Parcel(
+        pid="3970500693",
+        objectid=102,
+        snapshot_at=SNAPSHOT_TIME,
+        geometry_esri_json=geometry,
+        geometry_wkid=2273,
+        computed_area_sqft=10_000.0,
+        computed_acreage=10_000.0 / 43_560,
+        area_computation_method="shapely_single_ring_planar_wkid_2273",
+    )
+
+    db_session.add(record)
+    db_session.commit()
+
+    retrieved = db_session.scalar(
+        select(Parcel).where(Parcel.pid == "3970500693")
+    )
+
+    assert retrieved is not None
+    assert retrieved.geometry_esri_json == geometry
+    assert retrieved.geometry_wkid == 2273
+    assert retrieved.computed_area_sqft == 10_000.0
+    assert retrieved.computed_acreage == pytest.approx(10_000.0 / 43_560)
+    assert retrieved.area_computation_method == "shapely_single_ring_planar_wkid_2273"

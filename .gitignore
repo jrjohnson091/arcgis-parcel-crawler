@@ -12,6 +12,7 @@ htmlcov/
 
 # Jupyter
 .ipynb_checkpoints/
+notebooks/.Trash-0/
 
 # OS/editor
 .DS_Store

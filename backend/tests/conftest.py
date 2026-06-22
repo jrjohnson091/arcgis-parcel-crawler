@@ -1,15 +1,13 @@
 import pytest
+from app.config import settings
+from app.models import Base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from app.models import Base
 
-# Use an in-memory SQLite for blazing fast tests, 
-# or your local Postgres connection string
-DATABASE_URL = "sqlite:///:memory:"
 
 @pytest.fixture
 def db_session():
-    engine = create_engine(DATABASE_URL)
+    engine = create_engine(settings.SQLALCHEMY_DATABASE_URI)
     Base.metadata.create_all(engine) # Create tables
     SessionLocal = sessionmaker(bind=engine)
     session = SessionLocal()
